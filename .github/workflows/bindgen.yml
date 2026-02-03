@@ -44,29 +44,17 @@ jobs:
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Install Odin
+      - name: Setup Odin
         if: steps.changes.outputs.has_changes == 'true'
-        run: |
-          # Install the necessary dependencies
-          sudo apt-get update
-          sudo apt-get install -y llvm-14 clang-14 build-essential git
-
-          # Clone and compile Odin
-          git clone https://github.com/odin-lang/Odin.git /tmp/Odin
-          cd /tmp/Odin
-          make release-native
-
-          # Add to PATH
-          echo "/tmp/Odin" >> $GITHUB_PATH
+        uses: laytan/setup-odin@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release: latest
 
       - name: Test examples
         if: steps.changes.outputs.has_changes == 'true'
         id: test
         run: |
-          # Create a directory for test builds
-          mkdir -p test_builds
-          cd test_builds
-
           # List of examples
           EXAMPLES=(
             "animation"
@@ -102,20 +90,18 @@ jobs:
           for example in "${EXAMPLES[@]}"; do
             echo "Testing $example..."
 
-            if odin build "../examples/${example}.odin" -file -out:"${example}" 2>&1; then
-              if [ -f "${example}" ]; then
-                echo "[PASS] $example: Build successful"
-                ((PASSED++))
-                rm "${example}"  # Cleanup
-              else
-                echo "[FAIL] $example: Build succeeded but executable not found"
-                ((FAILED++))
-                FAILED_EXAMPLES="${FAILED_EXAMPLES}${example} (no executable), "
-              fi
+            set +e
+            odin check "../examples/${example}.odin" -file 2>&1
+            EXIT_CODE=$?
+            set -e
+
+            if [ $EXIT_CODE -eq 0 ]; then
+              echo "[PASS] $example"
+              ((PASSED++))
             else
-              echo "[FAIL] $example: Build failed"
+              echo "[FAIL] $example"
               ((FAILED++))
-              FAILED_EXAMPLES="${FAILED_EXAMPLES}${example} (build error), "
+              FAILED_EXAMPLES="${FAILED_EXAMPLES}- ${example}\n"
             fi
             echo ""
           done
@@ -132,11 +118,11 @@ jobs:
           echo "test_failed=$FAILED" >> $GITHUB_OUTPUT
           echo "test_total=$TOTAL" >> $GITHUB_OUTPUT
 
-          # If any tests failed, display which ones.
+          # If any tests failed, display which ones
           if [ $FAILED -gt 0 ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Failed examples:" >> $GITHUB_STEP_SUMMARY
-            echo "$FAILED_EXAMPLES" >> $GITHUB_STEP_SUMMARY
+            echo -e "$FAILED_EXAMPLES" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
