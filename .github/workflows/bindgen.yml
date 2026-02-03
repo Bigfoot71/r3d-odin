@@ -20,6 +20,11 @@ jobs:
         with:
           token: ${{ secrets.BINDGEN_PAT }}
 
+      - name: Clean existing bindings
+        run: |
+          rm -rf r3d/
+          mkdir -p r3d/
+
       - name: Download bindings artifact
         uses: dawidd6/action-download-artifact@v3
         with:
@@ -27,7 +32,7 @@ jobs:
           workflow: generate-binding.yml
           repo: Bigfoot71/r3d-odin-bindgen
           name: r3d-odin-bindings
-          path: .
+          path: r3d/
           run_id: ${{ github.event.client_payload.run_id || inputs.run_id }}
 
       - name: Check for changes
@@ -45,7 +50,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add .
+          git add r3d/
 
           COMMIT_MSG="Auto-update bindings"
           if [ -n "${{ github.event.client_payload.source_commit }}" ]; then
