@@ -1,0 +1,59 @@
+name: Update Bindings
+
+on:
+  repository_dispatch:
+    types: [bindings-ready]
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      run_id:
+        description: 'Run ID from r3d-odin-bindgen workflow'
+        required: true
+        type: string
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout r3d-odin repository
+        uses: actions/checkout@v4
+
+      - name: Download bindings artifact
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          github_token: ${{ secrets.BINDGEN_PAT }}
+          workflow: generate-binding.yml
+          repo: Bigfoot71/r3d-odin-bindgen
+          name: r3d-odin-bindings
+          path: .
+          run_id: ${{ github.event.client_payload.run_id || inputs.run_id }}
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          COMMIT_MSG="Auto-update bindings"
+          if [ -n "${{ github.event.client_payload.source_commit }}" ]; then
+            COMMIT_MSG="${COMMIT_MSG} From r3d commit: ${{ github.event.client_payload.source_sha }} ${{ github.event.client_payload.source_commit }}"
+          fi
+
+          git commit -m "$COMMIT_MSG"
+          git push
+
+      - name: No changes detected
+        if: steps.changes.outputs.has_changes == 'false'
+        run: |
+          echo "No changes in bindings, skipping commit"
