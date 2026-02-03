@@ -2,7 +2,7 @@
 
 <img align="left" src="https://github.com/Bigfoot71/r3d/blob/master/logo.png" width="100" hspace="20">
 <br>
-Odin binding for [r3d](https://github.com/Bigfoot71/r3d), a library that extends raylib's 3D capabilities with rendering, lighting, kinematics, mesh utilities, and more.
+Odin binding for <a href="https://github.com/Bigfoot71/r3d">r3d</a>, a library that extends <a href="https://www.raylib.com/">raylib</a>'s 3D capabilities with rendering, lighting, kinematics, mesh utilities, and more.
 <br clear="left">
 
 ## Overview
