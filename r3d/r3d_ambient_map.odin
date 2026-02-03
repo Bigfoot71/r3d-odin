@@ -1,0 +1,118 @@
+/* r3d_ambient_map.odin -- R3D Ambient Map Module.
+ *
+ * Copyright (c) 2025 Le Juez Victor
+ *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * For conditions of distribution and use, see accompanying LICENSE file.
+ */
+package r3d
+
+import rl "vendor:raylib"
+
+when ODIN_OS == .Windows {
+    foreign import lib {
+        "windows/libr3d.a",
+        "system:raylib",
+        "system:assimp",
+    }
+} else when ODIN_OS == .Linux {
+    foreign import lib {
+        "linux/libr3d.a",
+        "system:raylib",
+        "system:assimp",
+    }
+} else when ODIN_OS == .Darwin {
+    foreign import lib {
+        "darwin/libr3d.a",
+        "system:raylib",
+        "system:assimp",
+    }
+}
+
+/**
+ * @brief Global environment lighting data.
+ *
+ * An ambient map is built from a cubemap (like a skybox)
+ * and preprocessed into two specialized textures:
+ *
+ *  - irradiance:
+ *      Low-frequency lighting used for diffuse IBL.
+ *      Captures soft ambient light from all directions.
+ *
+ *  - prefilter:
+ *      Mipmapped environment used for specular reflections.
+ *      Higher mip levels simulate rougher surfaces.
+ *
+ * Both textures are derived from the same source cubemap,
+ * but serve different shading purposes.
+ */
+AmbientMap :: struct {
+    flags:      AmbientFlags, ///< Components generated for this map
+    irradiance: u32,          ///< Diffuse IBL cubemap (may be 0 if not generated)
+    prefilter:  u32,          ///< Specular prefiltered cubemap (may be 0 if not generated)
+}
+
+@(default_calling_convention="c", link_prefix="R3D_")
+foreign lib {
+    /**
+     * @brief Loads a ambient map from an image file.
+     *
+     * The layout parameter tells how faces are arranged inside the source image.
+     */
+    LoadAmbientMap :: proc(fileName: cstring, layout: CubemapLayout, flags: AmbientFlags) -> AmbientMap ---
+
+    /**
+     * @brief Builds a ambient map from an existing rl.Image.
+     *
+     * Same behavior as R3D_LoadAmbientMap(), but without loading from disk.
+     */
+    LoadAmbientMapFromImage :: proc(image: rl.Image, layout: CubemapLayout, flags: AmbientFlags) -> AmbientMap ---
+
+    /**
+     * @brief Generates an ambient map from a cubemap.
+     *
+     * The source cubemap should usually be an HDR sky/environment.
+     *
+     * Depending on the provided flags, this function:
+     *  - convolves the cubemap into diffuse irradiance
+     *  - builds a mipmapped prefiltered cubemap for reflections
+     *
+     * @param cubemap Source cubemap (environment / sky).
+     * @param flags   Which components to generate (irradiance, reflection, or both).
+     * @return A fully initialized ambient map.
+     */
+    GenAmbientMap :: proc(cubemap: Cubemap, flags: AmbientFlags) -> AmbientMap ---
+
+    /**
+     * @brief Frees the textures used by an ambient map.
+     *
+     * After this call, the ambient map is no longer valid.
+     */
+    UnloadAmbientMap :: proc(ambientMap: AmbientMap) ---
+
+    /**
+     * @brief Rebuilds an existing ambient map from a new cubemap.
+     *
+     * Use this when the environment changes dynamically (time of day,
+     * weather, interior/exterior transitions, etc).
+     *
+     * Only the components enabled in `ambientMap.flags` are regenerated.
+     *
+     * @param ambientMap Existing ambient map to update.
+     * @param cubemap    New cubemap source.
+     */
+    UpdateAmbientMap :: proc(ambientMap: AmbientMap, cubemap: Cubemap) ---
+}
+
+/**
+ * @brief Bit-flags controlling what components are generated.
+ *
+ * - R3D_AMBIENT_ILLUMINATION -> generate diffuse irradiance
+ * - R3D_AMBIENT_REFLECTION   -> generate specular prefiltered map
+ */
+AmbientFlag :: enum u32 {
+    ILLUMINATION = 0,
+    REFLECTION   = 1,
+}
+
+AmbientFlags :: bit_set[AmbientFlag; u32]
