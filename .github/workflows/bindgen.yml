@@ -47,13 +47,16 @@ jobs:
       - name: Install Odin
         if: steps.changes.outputs.has_changes == 'true'
         run: |
+          # Install the necessary dependencies
           sudo apt-get update
           sudo apt-get install -y llvm-14 clang-14 build-essential git
 
+          # Clone and compile Odin
           git clone https://github.com/odin-lang/Odin.git /tmp/Odin
           cd /tmp/Odin
-          make release
+          make release-native
 
+          # Add to PATH
           echo "/tmp/Odin" >> $GITHUB_PATH
 
       - name: Test examples
