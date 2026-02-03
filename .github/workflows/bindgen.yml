@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout r3d-odin repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BINDGEN_PAT }}
 
       - name: Download bindings artifact
         uses: dawidd6/action-download-artifact@v3
