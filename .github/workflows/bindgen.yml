@@ -3,7 +3,7 @@ name: Update Bindings
 on:
   repository_dispatch:
     types: [bindings-ready]
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
     inputs:
       run_id:
         description: 'Run ID from r3d-odin-bindgen workflow'
@@ -44,15 +44,112 @@ jobs:
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit and push changes
+      - name: Install Odin
         if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-14 clang-14 build-essential git
+
+          git clone https://github.com/odin-lang/Odin.git /tmp/Odin
+          cd /tmp/Odin
+          make release
+
+          echo "/tmp/Odin" >> $GITHUB_PATH
+
+      - name: Test examples
+        if: steps.changes.outputs.has_changes == 'true'
+        id: test
+        run: |
+          # Create a directory for test builds
+          mkdir -p test_builds
+          cd test_builds
+
+          # List of examples
+          EXAMPLES=(
+            "animation"
+            "basic"
+            "billboards"
+            "bloom"
+            "decal"
+            "dof"
+            "instanced"
+            "kinematics"
+            "lights"
+            "particles"
+            "pbr"
+            "probe"
+            "resize"
+            "shader"
+            "skybox"
+            "sprite"
+            "sun"
+            "transparency"
+          )
+
+          # Variables for the report
+          TOTAL=${#EXAMPLES[@]}
+          PASSED=0
+          FAILED=0
+          FAILED_EXAMPLES=""
+
+          echo "Testing $TOTAL examples..."
+          echo ""
+
+          # Test each example
+          for example in "${EXAMPLES[@]}"; do
+            echo "Testing $example..."
+
+            if odin build "../examples/${example}.odin" -file -out:"${example}" 2>&1; then
+              if [ -f "${example}" ]; then
+                echo "[PASS] $example: Build successful"
+                ((PASSED++))
+                rm "${example}"  # Cleanup
+              else
+                echo "[FAIL] $example: Build succeeded but executable not found"
+                ((FAILED++))
+                FAILED_EXAMPLES="${FAILED_EXAMPLES}${example} (no executable), "
+              fi
+            else
+              echo "[FAIL] $example: Build failed"
+              ((FAILED++))
+              FAILED_EXAMPLES="${FAILED_EXAMPLES}${example} (build error), "
+            fi
+            echo ""
+          done
+
+          # Create the summary
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total examples:** $TOTAL" >> $GITHUB_STEP_SUMMARY
+          echo "- **Passed:** $PASSED" >> $GITHUB_STEP_SUMMARY
+          echo "- **Failed:** $FAILED" >> $GITHUB_STEP_SUMMARY
+
+          # Save the results for the commit
+          echo "test_passed=$PASSED" >> $GITHUB_OUTPUT
+          echo "test_failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "test_total=$TOTAL" >> $GITHUB_OUTPUT
+
+          # If any tests failed, display which ones.
+          if [ $FAILED -gt 0 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Failed examples:" >> $GITHUB_STEP_SUMMARY
+            echo "$FAILED_EXAMPLES" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.has_changes == 'true' && steps.test.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add r3d/
 
-          COMMIT_MSG="Auto-update bindings"
+          COMMIT_MSG="Auto-update bindings [OK] (${{ steps.test.outputs.test_passed }}/${{ steps.test.outputs.test_total }} examples pass)"
+          
           if [ -n "${{ github.event.client_payload.source_commit }}" ]; then
             COMMIT_MSG="${COMMIT_MSG} From r3d commit: ${{ github.event.client_payload.source_sha }} ${{ github.event.client_payload.source_commit }}"
           fi
@@ -60,7 +157,14 @@ jobs:
           git commit -m "$COMMIT_MSG"
           git push origin master
 
+      - name: Tests failed
+        if: steps.changes.outputs.has_changes == 'true' && steps.test.outcome == 'failure'
+        run: |
+          echo "::error::Some examples failed to build. Bindings will not be pushed."
+          echo "Failed: ${{ steps.test.outputs.test_failed }}/${{ steps.test.outputs.test_total }} examples"
+          exit 1
+
       - name: No changes detected
         if: steps.changes.outputs.has_changes == 'false'
         run: |
-          echo "No changes in bindings, skipping commit"
+          echo "No changes in bindings, skipping tests and commit"
