@@ -51,105 +51,44 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           release: latest
 
-      - name: Test examples
+      - name: Test all examples
         if: steps.changes.outputs.has_changes == 'true'
-        id: test
         run: |
-          # List of examples
-          EXAMPLES=(
-            "animation"
-            "basic"
-            "billboards"
-            "bloom"
-            "decal"
-            "dof"
-            "instanced"
-            "kinematics"
-            "lights"
-            "particles"
-            "pbr"
-            "probe"
-            "resize"
-            "shader"
-            "skybox"
-            "sprite"
-            "sun"
-            "transparency"
-          )
-
-          # Variables for the report
-          TOTAL=${#EXAMPLES[@]}
-          PASSED=0
-          FAILED=0
-          FAILED_EXAMPLES=""
-
-          echo "Testing $TOTAL examples..."
-          echo ""
-
-          # Test each example
-          for example in "${EXAMPLES[@]}"; do
-            echo "Testing $example..."
-
-            odin check "examples/${example}.odin" -file 2>&1
-            EXIT_CODE=$?
-
-            if [ $EXIT_CODE -eq 0 ]; then
-              echo "[PASS] $example"
-              ((PASSED++))
-            else
-              echo "[FAIL] $example"
-              ((FAILED++))
-              FAILED_EXAMPLES="${FAILED_EXAMPLES}- ${example}\n"
-            fi
-            echo ""
-          done
-
-          # Create the summary
-          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Total examples:** $TOTAL" >> $GITHUB_STEP_SUMMARY
-          echo "- **Passed:** $PASSED" >> $GITHUB_STEP_SUMMARY
-          echo "- **Failed:** $FAILED" >> $GITHUB_STEP_SUMMARY
-
-          # Save the results for the commit
-          echo "test_passed=$PASSED" >> $GITHUB_OUTPUT
-          echo "test_failed=$FAILED" >> $GITHUB_OUTPUT
-          echo "test_total=$TOTAL" >> $GITHUB_OUTPUT
-
-          # If any tests failed, display which ones
-          if [ $FAILED -gt 0 ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Failed examples:" >> $GITHUB_STEP_SUMMARY
-            echo -e "$FAILED_EXAMPLES" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
+          odin check examples/animation.odin -file
+          odin check examples/basic.odin -file
+          odin check examples/billboards.odin -file
+          odin check examples/bloom.odin -file
+          odin check examples/decal.odin -file
+          odin check examples/dof.odin -file
+          odin check examples/instanced.odin -file
+          odin check examples/kinematics.odin -file
+          odin check examples/lights.odin -file
+          odin check examples/particles.odin -file
+          odin check examples/pbr.odin -file
+          odin check examples/probe.odin -file
+          odin check examples/resize.odin -file
+          odin check examples/shader.odin -file
+          odin check examples/skybox.odin -file
+          odin check examples/sprite.odin -file
+          odin check examples/sun.odin -file
+          odin check examples/transparency.odin -file
 
       - name: Commit and push changes
-        if: steps.changes.outputs.has_changes == 'true' && steps.test.outcome == 'success'
+        if: steps.changes.outputs.has_changes == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add r3d/
 
-          COMMIT_MSG="Auto-update bindings [OK] (${{ steps.test.outputs.test_passed }}/${{ steps.test.outputs.test_total }} examples pass)"
-          
+          COMMIT_MSG="Auto-update bindings"
+
           if [ -n "${{ github.event.client_payload.source_commit }}" ]; then
-            COMMIT_MSG="${COMMIT_MSG} From r3d commit: ${{ github.event.client_payload.source_sha }} ${{ github.event.client_payload.source_commit }}"
+            COMMIT_MSG="${COMMIT_MSG} - From r3d: ${{ github.event.client_payload.source_sha }}"
           fi
 
           git commit -m "$COMMIT_MSG"
           git push origin master
-
-      - name: Tests failed
-        if: steps.changes.outputs.has_changes == 'true' && steps.test.outcome == 'failure'
-        run: |
-          echo "::error::Some examples failed to build. Bindings will not be pushed."
-          echo "Failed: ${{ steps.test.outputs.test_failed }}/${{ steps.test.outputs.test_total }} examples"
-          exit 1
 
       - name: No changes detected
         if: steps.changes.outputs.has_changes == 'false'
