@@ -69,20 +69,33 @@ BlendMode :: enum u32 {
 }
 
 /**
- * @brief Depth comparison modes.
+ * @brief Comparison modes.
  *
- * Defines how fragments are tested against the depth buffer during rendering.
- * @note The depth mode affects both forward and deferred rendering passes.
+ * Defines how fragments are tested against the depth/stencil buffer during rendering.
+ * @note The depth/stencil comparison mode affects both forward and deferred rendering passes.
  */
-DepthMode :: enum u32 {
-    LESS     = 0, ///< Passes if depth < depth buffer (default)
-    LEQUAL   = 1, ///< Passes if depth <= depth buffer
-    EQUAL    = 2, ///< Passes if depth == depth buffer
-    GREATER  = 3, ///< Passes if depth > depth buffer
-    GEQUAL   = 4, ///< Passes if depth >= depth buffer
-    NOTEQUAL = 5, ///< Passes if depth != depth buffer
+CompareMode :: enum u32 {
+    LESS     = 0, ///< Passes if 'value' <  'buffer' (default)
+    LEQUAL   = 1, ///< Passes if 'value' <= 'buffer'
+    EQUAL    = 2, ///< Passes if 'value' == 'buffer'
+    GREATER  = 3, ///< Passes if 'value' >  'buffer'
+    GEQUAL   = 4, ///< Passes if 'value' >= 'buffer'
+    NOTEQUAL = 5, ///< Passes if 'value' != 'buffer'
     ALWAYS   = 6, ///< Always passes
     NEVER    = 7, ///< Never passes
+}
+
+/**
+ * @brief Stencil buffer operations.
+ *
+ * Defines how the stencil buffer value is modified based on test results.
+ */
+StencilOp :: enum u32 {
+    KEEP    = 0, ///< Keep the current stencil value
+    ZERO    = 1, ///< Set stencil value to 0
+    REPLACE = 2, ///< Replace with reference value
+    INCR    = 3, ///< Increment stencil value (clamped)
+    DECR    = 4, ///< Decrement stencil value (clamped)
 }
 
 /**
@@ -140,6 +153,38 @@ OrmMap :: struct {
 }
 
 /**
+ * @brief Depth buffer state configuration.
+ *
+ * Controls how fragments interact with the depth buffer during rendering..
+ *
+ * @note This structure does not directly control depth buffer writes for technical reasons.
+ *       To render objects without writing to the depth buffer, use alpha blending mode instead.
+ */
+DepthState :: struct {
+    mode:         CompareMode, ///< Comparison function for depth test (default: LESS)
+    offsetFactor: f32,         ///< Scales the maximum depth slope for polygon offset (default: 0.0f)
+    offsetUnits:  f32,         ///< Constant depth offset value (default: 0.0f)
+    rangeNear:    f32,         ///< Near clipping plane for depth range mapping (default: 0.0f)
+    rangeFar:     f32,         ///< Far clipping plane for depth range mapping (default: 1.0f)
+}
+
+/**
+ * @brief Stencil buffer state configuration.
+ *
+ * Controls how fragments interact with the stencil buffer during rendering.
+ * The stencil buffer can be used for effects like x-ray vision, outlines,
+ * portals, and masking.
+ */
+StencilState :: struct {
+    mode:    CompareMode, ///< Comparison function for stencil test (default: ALWAYS)
+    ref:     u8,          ///< Reference value (0-255) for comparison and replace operations (default: 0x00)
+    mask:    u8,          ///< Bit mask applied to both reference and stencil values during comparison (default: 0xFF)
+    opFail:  StencilOp,   ///< Operation when stencil test fails (default: KEEP)
+    opZFail: StencilOp,   ///< Operation when stencil test passes but depth test fails (default: KEEP)
+    opPass:  StencilOp,   ///< Operation when both stencil and depth tests pass (default: REPLACE)
+}
+
+/**
  * @brief Material definition.
  *
  * Combines multiple texture maps and rendering parameters for shading.
@@ -152,10 +197,11 @@ Material :: struct {
     uvOffset:         rl.Vector2,          ///< UV offset (default: {0.0f, 0.0f})
     uvScale:          rl.Vector2,          ///< UV scale (default: {1.0f, 1.0f})
     alphaCutoff:      f32,              ///< Alpha cutoff threshold (default: 0.01f)
+    depth:            DepthState,       ///< Depth test configuration (default: standard)
+    stencil:          StencilState,     ///< Stencil test configuration (default: disabled)
     transparencyMode: TransparencyMode, ///< Transparency mode (default: DISABLED)
     billboardMode:    BillboardMode,    ///< Billboard mode (default: DISABLED)
     blendMode:        BlendMode,        ///< Blend mode (default: MIX)
-    depthMode:        DepthMode,        ///< Depth mode (default: LESS)
     cullMode:         CullMode,         ///< Face culling mode (default: BACK)
     unlit:            bool,             ///< If true, material does not participate in lighting (default: false)
     shader:           ^SurfaceShader,   ///< Custom shader applied to the material (default: NULL)
@@ -346,30 +392,45 @@ foreign lib {
 MATERIAL_BASE :: Material {
     albedo = {
         texture = {},
-        color = {255, 255, 255, 255},
+        color   = {255, 255, 255, 255},
     },
     emission = {
         texture = {},
-        color = {255, 255, 255, 255},
-        energy = 0.0,
+        color   = {255, 255, 255, 255},
+        energy  = 0.0,
     },
     normal = {
         texture = {},
-        scale = 1.0,
+        scale   = 1.0,
     },
     orm = {
-        texture = {},
+        texture   = {},
         occlusion = 1.0,
         roughness = 1.0,
         metalness = 0.0,
     },
     uvOffset = {0.0, 0.0},
-    uvScale = {1.0, 1.0},
+    uvScale  = {1.0, 1.0},
     alphaCutoff = 0.01,
+    depth = {
+        mode         = .LESS,
+        offsetFactor = 0.0,
+        offsetUnits  = 0.0,
+        rangeNear    = 0.0,
+        rangeFar     = 1.0,
+    },
+    stencil = {
+        mode     = .ALWAYS,
+        ref      = 0x00,
+        mask     = 0xFF,
+        opFail   = .KEEP,
+        opZFail  = .KEEP,
+        opPass   = .REPLACE,
+    },
     transparencyMode = .DISABLED,
-    billboardMode = .DISABLED,
-    blendMode = .MIX,
-    depthMode = .LESS,
-    cullMode = .BACK,
+    billboardMode    = .DISABLED,
+    blendMode        = .MIX,
+    cullMode         = .BACK,
+    unlit  = false,
     shader = nil,
 }

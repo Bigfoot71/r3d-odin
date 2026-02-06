@@ -142,14 +142,13 @@ EnvSSIL :: struct {
  * Real-time reflections calculated in screen space.
  */
 EnvSSR :: struct {
-    maxRaySteps:       i32,  ///< Maximum ray marching iterations (default: 64)
-    binarySearchSteps: i32,  ///< Refinement steps for intersection (default: 8)
-    rayMarchLength:    f32,  ///< Maximum ray distance in view space (default: 8.0)
-    depthThickness:    f32,  ///< Depth tolerance for valid hits (default: 0.2)
-    depthTolerance:    f32,  ///< Negative margin to prevent false negatives (default: 0.005)
-    edgeFadeStart:     f32,  ///< Screen edge fade start [0-1] (default: 0.7)
-    edgeFadeEnd:       f32,  ///< Screen edge fade end [0-1] (default: 1.0)
-    enabled:           bool, ///< Enable/disable SSR (default: false)
+    maxRaySteps: i32,  ///< Maximum ray marching steps (default: 32)
+    binarySteps: i32,  ///< Binary search refinement steps (default: 4)
+    stepSize:    f32,  ///< rl.Ray step size (default: 0.125)
+    thickness:   f32,  ///< Depth tolerance for valid hits (default: 0.2)
+    maxDistance: f32,  ///< Maximum ray distance (default: 4.0)
+    edgeFade:    f32,  ///< Screen edge fade start [0,1] (default: 0.25)
+    enabled:     bool, ///< Enable/disable SSR (default: false)
 }
 
 /**
@@ -263,77 +262,77 @@ foreign lib {
  */
 ENVIRONMENT_BASE :: Environment {
     background = {
-        color = rl.GRAY,
-        energy = 1.0,
-        skyBlur = 0.0,
-        sky = {},
-        rotation = quaternion(w=1.0, x=0.0, y=0.0, z=0.0),
+        color    = rl.GRAY,
+        energy   = 1.0,
+        skyBlur  = 0.0,
+        sky      = {},
+        rotation = quaternion(x=0.0, y=0.0, z=0.0, w=1.0),
     },
     ambient = {
-        color = rl.BLACK,
+        color  = rl.BLACK,
         energy = 1.0,
-        _map = {},
+        _map   = {},
     },
     ssao = {
         sampleCount = 16,
-        intensity = 1.0,
-        power = 1.5,
-        radius = 0.35,
-        bias = 0.007,
-        enabled = false,
+        intensity   = 1.0,
+        power       = 1.5,
+        radius      = 0.35,
+        bias        = 0.007,
+        enabled     = false,
     },
     ssil = {
-        sampleCount = 4,
-        sliceCount = 4,
+        sampleCount  = 4,
+        sliceCount   = 4,
         sampleRadius = 2.0,
         hitThickness = 0.5,
-        aoPower = 1.0,
-        energy = 1.0,
-        bounce = 0.5,
-        convergence = 0.5,
-        enabled = false,
+        aoPower      = 1.0,
+        energy       = 1.0,
+        bounce       = 0.5,
+        convergence  = 0.5,
+        enabled      = false,
     },
     ssr = {
         maxRaySteps = 32,
-        binarySearchSteps = 4,
-        rayMarchLength = 5.0,
-        depthThickness = 0.5,
-        depthTolerance = 0.01,
-        edgeFadeStart = 0.75,
-        edgeFadeEnd = 1.0,
-        enabled = false,
+        binarySteps = 4,
+        stepSize    = 0.125,
+        thickness   = 0.2,
+        maxDistance = 4.0,
+        edgeFade    = 0.25,
+        enabled     = false,
     },
     bloom = {
-        mode = .DISABLED,
-        levels = 0.5,
-        intensity = 0.05,
-        threshold = 0.0,
+        mode          = .DISABLED,
+        levels        = 0.5,
+        intensity     = 0.05,
+        threshold     = 0.0,
         softThreshold = 0.5,
-        filterRadius = 1.0,
+        filterRadius  = 1.0,
     },
+
     fog = {
-        mode = .DISABLED,
-        color = {255, 255, 255, 255},
-        start = 1.0,
-        end = 50.0,
-        density = 0.05,
+        mode      = .DISABLED,
+        color     = {255, 255, 255, 255},
+        start     = 1.0,
+        end       = 50.0,
+        density   = 0.05,
         skyAffect = 0.5,
     },
     dof = {
-        mode = .DISABLED,
-        focusPoint = 10.0,
-        focusScale = 1.0,
+        mode        = .DISABLED,
+        focusPoint  = 10.0,
+        focusScale  = 1.0,
         maxBlurSize = 20.0,
-        debugMode = false,
+        debugMode   = false,
     },
     tonemap = {
-        mode = .LINEAR,
+        mode     = .LINEAR,
         exposure = 1.0,
-        white = 1.0,
+        white    = 1.0,
     },
     color = {
         brightness = 1.0,
-        contrast = 1.0,
+        contrast   = 1.0,
         saturation = 1.0,
     },
 }
