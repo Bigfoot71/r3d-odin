@@ -83,6 +83,7 @@ OutputMode :: enum u32 {
     SSIL     = 7,
     SSR      = 8,
     BLOOM    = 9,
+    DOF      = 10,
 }
 
 /**

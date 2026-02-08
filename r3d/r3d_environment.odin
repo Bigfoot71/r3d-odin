@@ -183,11 +183,10 @@ EnvFog :: struct {
  * Blurs objects outside the focal plane.
  */
 EnvDoF :: struct {
-    mode:        DoF,  ///< Enable/disable state (default: R3D_DOF_DISABLED)
-    focusPoint:  f32,  ///< Focus distance in meters from camera (default: 10.0)
-    focusScale:  f32,  ///< Depth of field depth: lower = shallower (default: 1.0)
-    maxBlurSize: f32,  ///< Maximum blur radius, similar to aperture (default: 20.0)
-    debugMode:   bool, ///< rl.Color-coded visualization: green=near, blue=far (default: false)
+    mode:        DoF, ///< Enable/disable state (default: R3D_DOF_DISABLED)
+    focusPoint:  f32, ///< Focus distance in meters from camera (default: 10.0)
+    focusScale:  f32, ///< Depth of field depth: lower = shallower (default: 1.0)
+    maxBlurSize: f32, ///< Maximum blur radius, similar to aperture (default: 20.0)
 }
 
 /**
@@ -275,10 +274,10 @@ ENVIRONMENT_BASE :: Environment {
     },
     ssao = {
         sampleCount = 16,
-        intensity   = 1.0,
+        intensity   = 0.5,
         power       = 1.5,
-        radius      = 0.35,
-        bias        = 0.007,
+        radius      = 0.5,
+        bias        = 0.02,
         enabled     = false,
     },
     ssil = {
@@ -309,7 +308,6 @@ ENVIRONMENT_BASE :: Environment {
         softThreshold = 0.5,
         filterRadius  = 1.0,
     },
-
     fog = {
         mode      = .DISABLED,
         color     = {255, 255, 255, 255},
@@ -323,7 +321,6 @@ ENVIRONMENT_BASE :: Environment {
         focusPoint  = 10.0,
         focusScale  = 1.0,
         maxBlurSize = 20.0,
-        debugMode   = false,
     },
     tonemap = {
         mode     = .LINEAR,
