@@ -27,7 +27,6 @@ main :: proc() {
     env.dof.focusPoint = 2.0
     env.dof.focusScale = 3.0
     env.dof.maxBlurSize = 20.0
-    env.dof.debugMode = false
 
     // Create directional light
     light := r3d.CreateLight(.DIR)
@@ -90,7 +89,11 @@ main :: proc() {
         }
 
         if rl.IsKeyPressed(.F1) {
-            env.dof.debugMode = !env.dof.debugMode
+            if r3d.GetOutputMode() == .DOF {
+                r3d.SetOutputMode(.SCENE)
+            } else {
+                r3d.SetOutputMode(.DOF)
+            }
         }
 
         rl.BeginDrawing()
@@ -105,7 +108,7 @@ main :: proc() {
             dofText := fmt.ctprintf(
                 "Focus Point: %.2f\nFocus Scale: %.2f\nMax Blur Size: %.2f\nDebug Mode: %v",
                 env.dof.focusPoint, env.dof.focusScale,
-                env.dof.maxBlurSize, env.dof.debugMode,
+                env.dof.maxBlurSize, r3d.GetOutputMode() == .DOF,
             )
             rl.DrawText(dofText, 10, 30, 20, {255, 255, 255, 127})
 
