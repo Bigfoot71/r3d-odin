@@ -29,6 +29,8 @@ when ODIN_OS == .Windows {
     }
 }
 
+R3D_INSTANCE_CUSTOM     :: (1<<4)    /*< rl.Vector4     */
+
 /**
  * @brief GPU buffers storing instance attribute streams.
  *
@@ -37,7 +39,7 @@ when ODIN_OS == .Windows {
  * flags: Enabled attribute mask.
  */
 InstanceBuffer :: struct {
-    buffers:  [4]u32,
+    buffers:  [5]u32,
     capacity: i32,
     flags:    i32,
 }
