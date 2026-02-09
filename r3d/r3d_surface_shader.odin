@@ -78,8 +78,10 @@ foreign lib {
      * @warning Boolean values are read as 4 bytes.
      *
      * @param shader Target surface shader.
-     * @param name Name of the uniform.
-     * @param value Pointer to the uniform value.
+     *               May be NULL. In that case, the call is ignored
+     *               and a warning is logged.
+     * @param name   Name of the uniform. Must not be NULL.
+     * @param value  Pointer to the uniform value. Must not be NULL.
      */
     SetSurfaceShaderUniform :: proc(shader: ^SurfaceShader, name: cstring, value: rawptr) ---
 
@@ -93,8 +95,10 @@ foreign lib {
      * Supported samplers:
      * sampler1D, sampler2D, sampler3D, samplerCube
      *
-     * @param shader Target surface shader.
-     * @param name Name of the sampler uniform.
+     * @param shader  Target surface shader.
+     *                May be NULL. In that case, the call is ignored
+     *                and a warning is logged.
+     * @param name    Name of the sampler uniform. Must not be NULL.
      * @param texture rl.Texture to bind to the sampler.
      */
     SetSurfaceShaderSampler :: proc(shader: ^SurfaceShader, name: cstring, texture: rl.Texture) ---
