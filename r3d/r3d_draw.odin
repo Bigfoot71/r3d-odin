@@ -103,6 +103,7 @@ foreign lib {
      * @brief Queues an instanced mesh draw command.
      *
      * Draws multiple instances using the provided instance buffer.
+     * Does nothing if the number of instances is <= 0.
      *
      * The command is executed during R3D_End().
      */
@@ -111,6 +112,7 @@ foreign lib {
     /**
      * @brief Queues an instanced mesh draw command with an additional transform.
      *
+     * Does nothing if the number of instances is <= 0.
      * The transform is applied to all instances.
      *
      * The command is executed during R3D_End().
@@ -142,6 +144,7 @@ foreign lib {
      * @brief Queues an instanced model draw command.
      *
      * Draws multiple instances using the provided instance buffer.
+     * Does nothing if the number of instances is <= 0.
      *
      * The command is executed during R3D_End().
      */
@@ -150,6 +153,7 @@ foreign lib {
     /**
      * @brief Queues an instanced model draw command with an additional transform.
      *
+     * Does nothing if the number of instances is <= 0.
      * The transform is applied to all instances.
      *
      * The command is executed during R3D_End().
@@ -185,6 +189,7 @@ foreign lib {
      * @brief Queues an instanced animated model draw command.
      *
      * Draws multiple animated instances using the provided instance buffer.
+     * Does nothing if the number of instances is <= 0.
      *
      * The command is executed during R3D_End().
      */
@@ -193,6 +198,7 @@ foreign lib {
     /**
      * @brief Queues an instanced animated model draw command with an additional transform.
      *
+     * Does nothing if the number of instances is <= 0.
      * The transform is applied to all instances.
      *
      * The command is executed during R3D_End().
@@ -224,6 +230,7 @@ foreign lib {
      * @brief Queues an instanced decal draw command.
      *
      * Draws multiple instances using the provided instance buffer.
+     * Does nothing if the number of instances is <= 0.
      *
      * The command is executed during R3D_End().
      */
@@ -232,6 +239,7 @@ foreign lib {
     /**
      * @brief Queues an instanced decal draw command with an additional transform.
      *
+     * Does nothing if the number of instances is <= 0.
      * The transform is applied to all instances.
      *
      * The command is executed during R3D_End().
