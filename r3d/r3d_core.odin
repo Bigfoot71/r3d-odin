@@ -81,9 +81,10 @@ OutputMode :: enum u32 {
     SPECULAR = 5,
     SSAO     = 6,
     SSIL     = 7,
-    SSR      = 8,
-    BLOOM    = 9,
-    DOF      = 10,
+    SSGI     = 8,
+    SSR      = 9,
+    BLOOM    = 10,
+    DOF      = 11,
 }
 
 /**

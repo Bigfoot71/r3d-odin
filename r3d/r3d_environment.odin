@@ -112,28 +112,41 @@ EnvSSAO :: struct {
 /**
  * @brief Screen Space Indirect Lighting (SSIL) settings.
  *
- * Approximates indirect lighting by gathering light from nearby surfaces in screen space.
+ * Approximates indirect lighting by gathering light from nearby visible
+ * surfaces in screen space.
+ *
+ * With a small radius, SSIL behaves like an extension of SSAO,
+ * producing a very subtle local blending of light and surface hues.
+ * With a larger radius, it becomes a better complement to SSGI,
+ * reinforcing indirect lighting over a wider area.
  */
 EnvSSIL :: struct {
-    sampleCount:  i32,  ///< Number of samples to compute indirect lighting (default: 4)
+    sampleCount:  i32,  ///< Number of samples to compute indirect lighting (default: 2)
     sliceCount:   i32,  ///< Number of depth slices for accumulation (default: 4)
-    sampleRadius: f32,  ///< Maximum distance to gather light from (default: 5.0)
-    hitThickness: f32,  ///< Thickness threshold for occluders (default: 0.5)
-    aoPower:      f32,  ///< Exponential falloff for visibility factor (too high = more noise) (default: 1.0)
-    energy:       f32,  ///< Multiplier for indirect light intensity (default: 1.0)
-    bounce:       f32,  /**< Bounce feeback factor. (default: 0.5)
-                              *  Simulates light bounces by re-injecting the SSIL from the previous frame into the current direct light.
-                              *  Be careful not to make the factor too high in order to avoid a feedback loop.
-                              */
-    convergence:  f32,  /**< Temporal convergence factor (0 disables it, default 0.5).
-                              *  Smooths sudden light flashes by blending with previous frames.
-                              *  Higher values produce smoother results but may cause ghosting.
-                              *  Tip: The faster the screen changes, the higher the convergence can be acceptable.
-                              *  Requires an additional history buffer (so require more memory). 
-                              *  If multiple SSIL passes are done in the same frame, the history may be inconsistent, 
-                              *  in that case, enable SSIL/convergence for only one pass per frame.
-                              */
+    radius:       f32,  ///< Maximum distance to gather light from (default: 2.0)
+    thickness:    f32,  ///< Thickness threshold for occluders (default: 1.0)
+    intensity:    f32,  ///< IL intensity multiplier (default: 1.0)
+    aoPower:      f32,  ///< AO exponent/power (default: 1.0)
+    denoiseSteps: i32,  ///< Number of denoiser iterations (default: 4)
     enabled:      bool, ///< Enable/disable SSIL effect (default: false)
+}
+
+/**
+ * @brief Screen Space Global Illumination (SSGI) settings.
+ *
+ * Real-time global illlumination calculated in screen space.
+ * @note Best suited for enclosed/indoor environments.
+ */
+EnvSSGI :: struct {
+    sampleCount:  i32,  ///< Number of rays per pixel (default: 2)
+    maxRaySteps:  i32,  ///< Maximum ray marching steps (default: 32)
+    stepSize:     f32,  ///< rl.Ray step size (default: 0.125)
+    thickness:    f32,  ///< Depth tolerance for valid hits (default: 1.0)
+    maxDistance:  f32,  ///< Maximum ray distance (default: 4.0)
+    fadeStart:    f32,  ///< Distance at which the GI fade begins (default: 8.0)
+    fadeEnd:      f32,  ///< Distance at which GI is fully faded (default: 16.0)
+    denoiseSteps: i32,  ///< Number of denoiser iterations (default: 5)
+    enabled:      bool, ///< Enable/disable SSGI (default: false)
 }
 
 /**
@@ -222,6 +235,7 @@ Environment :: struct {
     ambient:    EnvAmbient,    ///< Ambient lighting configuration
     ssao:       EnvSSAO,       ///< Screen space ambient occlusion
     ssil:       EnvSSIL,       ///< Screen space indirect lighting
+    ssgi:       EnvSSGI,       ///< Screen space global illumination
     ssr:        EnvSSR,        ///< Screen space reflections
     bloom:      EnvBloom,      ///< Bloom glow effect
     fog:        EnvFog,        ///< Atmospheric fog
@@ -281,14 +295,24 @@ ENVIRONMENT_BASE :: Environment {
         enabled     = false,
     },
     ssil = {
-        sampleCount  = 4,
+        sampleCount  = 2,
         sliceCount   = 4,
-        sampleRadius = 2.0,
-        hitThickness = 0.5,
+        radius       = 2.0,
+        thickness    = 1.0,
+        intensity    = 1.0,
         aoPower      = 1.0,
-        energy       = 1.0,
-        bounce       = 0.5,
-        convergence  = 0.5,
+        denoiseSteps = 4,
+        enabled      = false,
+    },
+    ssgi = {
+        sampleCount  = 2,
+        maxRaySteps  = 32,
+        stepSize     = 0.125,
+        thickness    = 1.0,
+        maxDistance  = 4.0,
+        fadeStart    = 8.0,
+        fadeEnd      = 16.0,
+        denoiseSteps = 5,
         enabled      = false,
     },
     ssr = {
