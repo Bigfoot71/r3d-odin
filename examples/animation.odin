@@ -12,7 +12,7 @@ main :: proc() {
     // Initialize R3D with FXAA
     r3d.Init(rl.GetScreenWidth(), rl.GetScreenHeight())
     defer r3d.Close()
-    r3d.SetAntiAliasing(.FXAA)
+    r3d.SetAntiAliasingMode(.FXAA)
 
     // Setup environment sky
     cubemap := r3d.LoadCubemap("./resources/panorama/indoor.png", .AUTO_DETECT)

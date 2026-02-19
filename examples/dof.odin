@@ -18,7 +18,7 @@ main :: proc() {
     // Initialize R3D with FXAA
     r3d.Init(rl.GetScreenWidth(), rl.GetScreenHeight())
     defer r3d.Close()
-    r3d.SetAntiAliasing(.FXAA)
+    r3d.SetAntiAliasingMode(.FXAA)
 
     // Configure depth of field and background
     env := r3d.GetEnvironment()

@@ -16,7 +16,7 @@ main :: proc() {
     // Initialize R3D
     r3d.Init(rl.GetScreenWidth(), rl.GetScreenHeight())
     defer r3d.Close()
-    r3d.SetAntiAliasing(.FXAA)
+    r3d.SetAntiAliasingMode(.FXAA)
 
     // Create meshes and material
     plane := r3d.GenMeshPlane(1000, 1000, 1, 1)
