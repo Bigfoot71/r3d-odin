@@ -30,11 +30,29 @@ when ODIN_OS == .Windows {
 }
 
 /**
- * @brief Anti-aliasing modes for rendering.
+ * @brief Anti-aliasing modes used during rendering.
+ *
+ * Anti-aliasing reduces visible jagged edges (aliasing artifacts)
+ * in the final rendered image.
  */
-AntiAliasing :: enum u32 {
-    DISABLED = 0, ///< Anti-aliasing is disabled. Edges may appear jagged.
-    FXAA     = 1, ///< FXAA is applied. Smooths edges efficiently but may appear blurry.
+AntiAliasingMode :: enum u32 {
+    NONE = 0, ///< No anti-aliasing. Best performance, visible jagged edges.
+    FXAA = 1, ///< Fast Approximate AA. Smooths edges efficiently but may appear blurry.
+    SMAA = 2, ///< Subpixel Morphological AA. Sharper than FXAA, moderate performance cost.
+}
+
+/**
+ * @brief Quality presets for anti-aliasing.
+ *
+ * Presets adjust internal algorithm parameters (e.g. edge detection,
+ * search steps, thresholds). Higher presets increase quality and GPU cost.
+ */
+AntiAliasingPreset :: enum u32 {
+    LOW    = 0, ///< Performance-oriented preset with reduced quality.
+    MEDIUM = 1, ///< Balanced quality/performance preset.
+    HIGH   = 2, ///< High quality preset with increased GPU cost.
+    ULTRA  = 3, ///< Maximum quality preset, highest performance cost.
+    COUNT  = 4, ///< Number of presets (not a valid preset value).
 }
 
 /**
@@ -153,15 +171,38 @@ foreign lib {
 
     /**
      * @brief Retrieves the current anti-aliasing mode used for rendering.
-     * @return The currently active R3D_AntiAliasing mode.
+     *
+     * @return The currently active R3D_AntiAliasingMode.
      */
-    GetAntiAliasing :: proc() -> AntiAliasing ---
+    GetAntiAliasingMode :: proc() -> AntiAliasingMode ---
 
     /**
      * @brief Sets the anti-aliasing mode for rendering.
-     * @param mode The desired R3D_AntiAliasing mode.
+     *
+     * The new mode takes effect on subsequent frames.
+     *
+     * @param mode The desired R3D_AntiAliasingMode.
+     * @note If the mode is invalid, no AA will be applied.
      */
-    SetAntiAliasing :: proc(mode: AntiAliasing) ---
+    SetAntiAliasingMode :: proc(mode: AntiAliasingMode) ---
+
+    /**
+     * @brief Retrieves the current anti-aliasing quality preset.
+     *
+     * @return The currently active R3D_AntiAliasingPreset.
+     */
+    GetAntiAliasingPreset :: proc() -> AntiAliasingPreset ---
+
+    /**
+     * @brief Sets the anti-aliasing quality preset.
+     *
+     * Changing the preset triggers an internal shader recompilation.
+     * Compiled variants are cached and reused if the preset is set again.
+     *
+     * @param preset The desired R3D_AntiAliasingPreset.
+     * @note The preset will be a clamp between low and ultra.
+     */
+    SetAntiAliasingPreset :: proc(preset: AntiAliasingPreset) ---
 
     /**
      * @brief Retrieves the current aspect ratio handling mode.
