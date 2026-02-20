@@ -55,27 +55,6 @@ Cubemap :: struct {
     size:    i32,
 }
 
-/**
- * @brief Parameters for procedural sky generation.
- *
- * Curves control gradient falloff (lower = sharper transition at horizon).
- */
-CubemapSky :: struct {
-    skyTopColor:        rl.Color,   // Sky color at zenith
-    skyHorizonColor:    rl.Color,   // Sky color at horizon
-    skyHorizonCurve:    f32,     // Gradient curve exponent (0.01 - 1.0, typical: 0.15)
-    skyEnergy:          f32,     // Sky brightness multiplier
-    groundBottomColor:  rl.Color,   // Ground color at nadir
-    groundHorizonColor: rl.Color,   // Ground color at horizon
-    groundHorizonCurve: f32,     // Gradient curve exponent (typical: 0.02)
-    groundEnergy:       f32,     // Ground brightness multiplier
-    sunDirection:       rl.Vector3, // Direction from which light comes (can take not normalized)
-    sunColor:           rl.Color,   // Sun disk color
-    sunSize:            f32,     // Sun angular size in radians (real sun: ~0.0087 rad = 0.5°)
-    sunCurve:           f32,     // Sun edge softness exponent (typical: 0.15)
-    sunEnergy:          f32,     // Sun brightness multiplier
-}
-
 @(default_calling_convention="c", link_prefix="R3D_")
 foreign lib {
     /**
@@ -93,39 +72,8 @@ foreign lib {
     LoadCubemapFromImage :: proc(image: rl.Image, layout: CubemapLayout) -> Cubemap ---
 
     /**
-     * @brief Generates a procedural sky cubemap.
-     *
-     * Creates a GPU cubemap with procedural gradient sky and sun rendering.
-     * The cubemap is ready for use as environment map or IBL source.
-     */
-    GenCubemapSky :: proc(size: i32, params: CubemapSky) -> Cubemap ---
-
-    /**
      * @brief Releases GPU resources associated with a cubemap.
      */
     UnloadCubemap :: proc(cubemap: Cubemap) ---
-
-    /**
-     * @brief Updates an existing procedural sky cubemap.
-     *
-     * Re-renders the cubemap with new parameters. Faster than unload + generate
-     * when animating sky conditions (time of day, weather, etc.).
-     */
-    UpdateCubemapSky :: proc(cubemap: ^Cubemap, params: CubemapSky) ---
 }
 
-CUBEMAP_SKY_BASE :: CubemapSky {
-    skyTopColor = {98, 116, 140, 255},
-    skyHorizonColor = {165, 167, 171, 255},
-    skyHorizonCurve = 0.15,
-    skyEnergy = 1.0,
-    groundBottomColor = {51, 43, 34, 255},
-    groundHorizonColor = {165, 167, 171, 255},
-    groundHorizonCurve = 0.02,
-    groundEnergy = 1.0,
-    sunDirection = {-1.0, -1.0, -1.0},
-    sunColor = {255, 255, 255, 255},
-    sunSize = 1.5 * rl.DEG2RAD,
-    sunCurve = 0.15,
-    sunEnergy = 1.0,
-}
