@@ -25,7 +25,7 @@ main :: proc() {
     defer r3d.Close()
     r3d.SetTextureFilter(.ANISOTROPIC_8X)
 
-    sky := r3d.GenCubemapSky(4096, r3d.CUBEMAP_SKY_BASE)
+    sky := r3d.GenProceduralSky(1024, r3d.PROCEDURAL_SKY_BASE)
     ambient := r3d.GenAmbientMap(sky, {.ILLUMINATION, .REFLECTION})
     env := r3d.GetEnvironment()
     env.background.sky = sky

@@ -43,7 +43,7 @@ main :: proc() {
     r3d.UnmapInstances(instances, {.POSITION})
 
     // Setup environment
-    skybox := r3d.GenCubemapSky(1024, r3d.CUBEMAP_SKY_BASE)
+    skybox := r3d.GenProceduralSky(1024, r3d.PROCEDURAL_SKY_BASE)
     env := r3d.GetEnvironment()
     env.background.sky = skybox
 

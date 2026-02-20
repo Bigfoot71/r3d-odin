@@ -18,27 +18,58 @@ main :: proc() {
     defer r3d.UnloadMesh(sphere)
 
     // Define procedural skybox parameters
-    skyParams := r3d.CUBEMAP_SKY_BASE
+    skyParams := r3d.PROCEDURAL_SKY_BASE
     skyParams.groundEnergy = 2.0
     skyParams.skyEnergy = 2.0
     skyParams.sunEnergy = 2.0
 
+    // Load a custom sky shader
+    shader := r3d.LoadSkyShader("./resources/shaders/sky.glsl")
+    color := rl.Vector3{0.0, 0.5, 0.0}
+    r3d.SetSkyShaderUniform(shader, "u_color", &color)
+    cells := [2]i32{10, 10}
+    r3d.SetSkyShaderUniform(shader, "u_cells", &cells)
+    line_px := f32(1.0)
+    r3d.SetSkyShaderUniform(shader, "u_line_px", &line_px)
+
     // Load and generate skyboxes
-    skyProcedural := r3d.GenCubemapSky(512, skyParams)
-    defer r3d.UnloadCubemap(skyProcedural)
-    skyPanorama := r3d.LoadCubemap("./resources/panorama/sky.png", .AUTO_DETECT)
+    skyPanorama := r3d.LoadCubemap("./resources/panorama/sky.hdr", .AUTO_DETECT)
     defer r3d.UnloadCubemap(skyPanorama)
+    skyProcedural := r3d.GenProceduralSky(1024, skyParams)
+    defer r3d.UnloadCubemap(skyProcedural)
+    skyCustom := r3d.GenCustomSky(512, shader)
+    defer r3d.UnloadCubemap(skyCustom)
 
     // Generate ambient maps
-    ambientProcedural := r3d.GenAmbientMap(skyProcedural, {.ILLUMINATION, .REFLECTION})
-    defer r3d.UnloadAmbientMap(ambientProcedural)
     ambientPanorama := r3d.GenAmbientMap(skyPanorama, {.ILLUMINATION, .REFLECTION})
     defer r3d.UnloadAmbientMap(ambientPanorama)
+    ambientProcedural := r3d.GenAmbientMap(skyProcedural, {.ILLUMINATION, .REFLECTION})
+    defer r3d.UnloadAmbientMap(ambientProcedural)
+    ambientCustom := r3d.GenAmbientMap(skyCustom, {.ILLUMINATION, .REFLECTION})
+    defer r3d.UnloadAmbientMap(ambientCustom)
+
+    // Store skies/ambients
+    backgrounds: [3]r3d.EnvBackground
+    ambients: [3]r3d.EnvAmbient
+    currentSky := 0
+
+    for i in 0..<3 {
+        backgrounds[i].energy = 1.0
+        ambients[i].energy = 1.0
+    }
+
+    backgrounds[0].sky = skyPanorama
+    backgrounds[1].sky = skyProcedural
+    backgrounds[2].sky = skyCustom
+
+    ambients[0]._map = ambientPanorama
+    ambients[1]._map = ambientProcedural
+    ambients[2]._map = ambientCustom
 
     // Set default sky/ambient maps
     env := r3d.GetEnvironment()
-    env.background.sky = skyPanorama
-    env.ambient._map = ambientPanorama
+    env.background = backgrounds[0]
+    env.ambient = ambients[0]
 
     // Set tonemapping
     env.tonemap.mode = .AGX
@@ -46,32 +77,28 @@ main :: proc() {
     // Setup camera
     camera: rl.Camera3D = {
         position = {0, 0, 10},
-        target = {0, 0, 0},
-        up = {0, 1, 0},
-        fovy = 60,
+        target   = {0, 0, 0},
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     // Capture mouse
     rl.DisableCursor()
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         rl.UpdateCamera(&camera, rl.CameraMode.FREE)
 
         rl.BeginDrawing()
             rl.ClearBackground(rl.RAYWHITE)
 
+            if rl.IsMouseButtonPressed(.RIGHT) do currentSky += 1
+            if rl.IsMouseButtonPressed(.LEFT)  do currentSky -= 1
+            currentSky = (currentSky + 3) % 3
+
             env := r3d.GetEnvironment()
-            if rl.IsMouseButtonPressed(.LEFT) {
-                if env.background.sky.texture == skyPanorama.texture {
-                    env.background.sky = skyProcedural
-                    env.ambient._map = ambientProcedural
-                } else {
-                    env.background.sky = skyPanorama
-                    env.ambient._map = ambientPanorama
-                }
-            }
+            env.background = backgrounds[currentSky]
+            env.ambient = ambients[currentSky]
 
             // Draw sphere grid
             r3d.Begin(camera)
