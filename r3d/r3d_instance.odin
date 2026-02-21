@@ -29,8 +29,6 @@ when ODIN_OS == .Windows {
     }
 }
 
-R3D_INSTANCE_CUSTOM     :: (1<<4)    /*< rl.Vector4     */
-
 /**
  * @brief GPU buffers storing instance attribute streams.
  *
@@ -40,8 +38,8 @@ R3D_INSTANCE_CUSTOM     :: (1<<4)    /*< rl.Vector4     */
  */
 InstanceBuffer :: struct {
     buffers:  [5]u32,
+    flags:    InstanceFlags,
     capacity: i32,
-    flags:    i32,
 }
 
 @(default_calling_convention="c", link_prefix="R3D_")
@@ -86,11 +84,11 @@ foreign lib {
  * @brief Bitmask defining which instance attributes are present.
  */
 InstanceFlag :: enum u32 {
-    POSITION = 0,
-    ROTATION = 1,
-    SCALE = 2,
-    COLOR = 3,
-    CUSTOM = 4,
+    POSITION = 0,   ///< rl.Vector3
+    ROTATION = 1,   ///< rl.Quaternion
+    SCALE    = 2,   ///< rl.Vector3
+    COLOR    = 3,   ///< rl.Color
+    CUSTOM   = 4,   ///< rl.Vector4
 }
 
 InstanceFlags :: bit_set[InstanceFlag; u32]
