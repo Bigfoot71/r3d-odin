@@ -11,9 +11,9 @@ import rl "vendor:raylib"
 
 when ODIN_OS == .Windows {
     foreign import lib {
-        "windows/libr3d.a",
+        "windows/r3d.lib",
         "vendor:raylib/windows/raylib.lib",
-        "windows/libassimp.a",
+        "windows/assimp-vc143-mt.lib",
         "vendor:zlib/libz.lib",
     }
 } else when ODIN_OS == .Linux {
