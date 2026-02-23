@@ -118,14 +118,31 @@ foreign lib {
     DrawMeshInstanced :: proc(mesh: Mesh, material: Material, instances: InstanceBuffer, count: i32) ---
 
     /**
-     * @brief Queues an instanced mesh draw command with an additional transform.
+     * @brief Queues an instanced mesh draw command with an instance range.
      *
-     * Does nothing if the number of instances is <= 0.
+     * Draws 'count' instances starting at 'offset' in the instance buffer.
+     * Both 'offset' and 'count' are clamped to stay within [0, instances.capacity]:
+     *   - offset is clamped to [0, capacity]
+     *   - count is clamped to [0, capacity - offset]
+     * Does nothing if the resulting count is <= 0.
+     *
+     * The command is executed during R3D_End().
+     */
+    DrawMeshInstancedEx :: proc(mesh: Mesh, material: Material, instances: InstanceBuffer, offset: i32, count: i32) ---
+
+    /**
+     * @brief Queues an instanced mesh draw command with an instance range and an additional transform.
+     *
+     * Draws 'count' instances starting at 'offset' in the instance buffer.
+     * Both 'offset' and 'count' are clamped to stay within [0, instances.capacity]:
+     *   - offset is clamped to [0, capacity]
+     *   - count is clamped to [0, capacity - offset]
+     * Does nothing if the resulting count is <= 0.
      * The transform is applied to all instances.
      *
      * The command is executed during R3D_End().
      */
-    DrawMeshInstancedEx :: proc(mesh: Mesh, material: Material, instances: InstanceBuffer, count: i32, transform: rl.Matrix) ---
+    DrawMeshInstancedPro :: proc(mesh: Mesh, material: Material, instances: InstanceBuffer, offset: i32, count: i32, transform: rl.Matrix) ---
 
     /**
      * @brief Queues a model draw command with position and uniform scale.
@@ -159,14 +176,31 @@ foreign lib {
     DrawModelInstanced :: proc(model: Model, instances: InstanceBuffer, count: i32) ---
 
     /**
-     * @brief Queues an instanced model draw command with an additional transform.
+     * @brief Queues an instanced model draw command with an instance range.
      *
-     * Does nothing if the number of instances is <= 0.
+     * Draws 'count' instances starting at 'offset' in the instance buffer.
+     * Both 'offset' and 'count' are clamped to stay within [0, instances.capacity]:
+     *   - offset is clamped to [0, capacity]
+     *   - count is clamped to [0, capacity - offset]
+     * Does nothing if the resulting count is <= 0.
+     *
+     * The command is executed during R3D_End().
+     */
+    DrawModelInstancedEx :: proc(model: Model, instances: InstanceBuffer, offset: i32, count: i32) ---
+
+    /**
+     * @brief Queues an instanced model draw command with an instance range and an additional transform.
+     *
+     * Draws 'count' instances starting at 'offset' in the instance buffer.
+     * Both 'offset' and 'count' are clamped to stay within [0, instances.capacity]:
+     *   - offset is clamped to [0, capacity]
+     *   - count is clamped to [0, capacity - offset]
+     * Does nothing if the resulting count is <= 0.
      * The transform is applied to all instances.
      *
      * The command is executed during R3D_End().
      */
-    DrawModelInstancedEx :: proc(model: Model, instances: InstanceBuffer, count: i32, transform: rl.Matrix) ---
+    DrawModelInstancedPro :: proc(model: Model, instances: InstanceBuffer, offset: i32, count: i32, transform: rl.Matrix) ---
 
     /**
      * @brief Queues an animated model draw command.
@@ -204,14 +238,31 @@ foreign lib {
     DrawAnimatedModelInstanced :: proc(model: Model, player: AnimationPlayer, instances: InstanceBuffer, count: i32) ---
 
     /**
-     * @brief Queues an instanced animated model draw command with an additional transform.
+     * @brief Queues an instanced animated model draw command with an instance range.
      *
-     * Does nothing if the number of instances is <= 0.
+     * Draws 'count' animated instances starting at 'offset' in the instance buffer.
+     * Both 'offset' and 'count' are clamped to stay within [0, instances.capacity]:
+     *   - offset is clamped to [0, capacity]
+     *   - count is clamped to [0, capacity - offset]
+     * Does nothing if the resulting count is <= 0.
+     *
+     * The command is executed during R3D_End().
+     */
+    DrawAnimatedModelInstancedEx :: proc(model: Model, player: AnimationPlayer, instances: InstanceBuffer, offset: i32, count: i32) ---
+
+    /**
+     * @brief Queues an instanced animated model draw command with an instance range and an additional transform.
+     *
+     * Draws 'count' animated instances starting at 'offset' in the instance buffer.
+     * Both 'offset' and 'count' are clamped to stay within [0, instances.capacity]:
+     *   - offset is clamped to [0, capacity]
+     *   - count is clamped to [0, capacity - offset]
+     * Does nothing if the resulting count is <= 0.
      * The transform is applied to all instances.
      *
      * The command is executed during R3D_End().
      */
-    DrawAnimatedModelInstancedEx :: proc(model: Model, player: AnimationPlayer, instances: InstanceBuffer, count: i32, transform: rl.Matrix) ---
+    DrawAnimatedModelInstancedPro :: proc(model: Model, player: AnimationPlayer, instances: InstanceBuffer, offset: i32, count: i32, transform: rl.Matrix) ---
 
     /**
      * @brief Queues a decal draw command with position and uniform scale.
@@ -245,13 +296,30 @@ foreign lib {
     DrawDecalInstanced :: proc(decal: Decal, instances: InstanceBuffer, count: i32) ---
 
     /**
-     * @brief Queues an instanced decal draw command with an additional transform.
+     * @brief Queues an instanced decal draw command with an instance range.
      *
-     * Does nothing if the number of instances is <= 0.
+     * Draws 'count' instances starting at 'offset' in the instance buffer.
+     * Both 'offset' and 'count' are clamped to stay within [0, instances.capacity]:
+     *   - offset is clamped to [0, capacity]
+     *   - count is clamped to [0, capacity - offset]
+     * Does nothing if the resulting count is <= 0.
+     *
+     * The command is executed during R3D_End().
+     */
+    DrawDecalInstancedEx :: proc(decal: Decal, instances: InstanceBuffer, offset: i32, count: i32) ---
+
+    /**
+     * @brief Queues an instanced decal draw command with an instance range and an additional transform.
+     *
+     * Draws 'count' instances starting at 'offset' in the instance buffer.
+     * Both 'offset' and 'count' are clamped to stay within [0, instances.capacity]:
+     *   - offset is clamped to [0, capacity]
+     *   - count is clamped to [0, capacity - offset]
+     * Does nothing if the resulting count is <= 0.
      * The transform is applied to all instances.
      *
      * The command is executed during R3D_End().
      */
-    DrawDecalInstancedEx :: proc(decal: Decal, instances: InstanceBuffer, count: i32, transform: rl.Matrix) ---
+    DrawDecalInstancedPro :: proc(decal: Decal, instances: InstanceBuffer, offset: i32, count: i32, transform: rl.Matrix) ---
 }
 
