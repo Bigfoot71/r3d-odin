@@ -47,19 +47,6 @@ MeshUsage :: enum u32 {
 }
 
 /**
- * @brief Defines the geometric primitive type.
- */
-PrimitiveType :: enum u32 {
-    POINTS         = 0, ///< Each vertex represents a single point.
-    LINES          = 1, ///< Each pair of vertices forms an independent line segment.
-    LINE_STRIP     = 2, ///< Connected series of line segments sharing vertices.
-    LINE_LOOP      = 3, ///< Closed loop of connected line segments.
-    TRIANGLES      = 4, ///< Each set of three vertices forms an independent triangle.
-    TRIANGLE_STRIP = 5, ///< Connected strip of triangles sharing vertices.
-    TRIANGLE_FAN   = 6, ///< Fan of triangles sharing the first vertex.
-}
-
-/**
  * @brief Shadow casting modes for objects.
  *
  * Controls how an object interacts with the shadow mapping system.
@@ -85,14 +72,16 @@ ShadowCastMode :: enum u32 {
  * Can represent a static or skinned mesh.
  */
 Mesh :: struct {
-    vao, vbo, ebo:                     u32,            ///< OpenGL objects handles.
-    vertexCount, indexCount:           i32,            ///< Number of vertices and indices currently in use.
-    allocVertexCount, allocIndexCount: i32,            ///< Number of vertices and indices allocated in GPU buffers.
-    shadowCastMode:                    ShadowCastMode, ///< Shadow casting mode for the mesh.
-    primitiveType:                     PrimitiveType,  ///< Type of primitive that constitutes the vertices.
-    usage:                             MeshUsage,      ///< Hint about the usage of the mesh, retained in case of update if there is a reallocation.
-    layerMask:                         Layer,          ///< Bitfield indicating the rendering layer(s) of this mesh.
-    aabb:                              rl.BoundingBox,    ///< Axis-Aligned Bounding Box in local space.
+    vao, vbo, ebo:  u32,            ///< OpenGL objects handles.
+    vertexCapacity: i32,            ///< Number of vertices allocated in GPU buffers.
+    indexCapacity:  i32,            ///< Number of indices allocated in GPU buffers.
+    vertexCount:    i32,            ///< Number of vertices currently in use.
+    indexCount:     i32,            ///< Number of indices currently in use.
+    shadowCastMode: ShadowCastMode, ///< Shadow casting mode for the mesh.
+    primitiveType:  PrimitiveType,  ///< Type of primitive that constitutes the vertices.
+    usage:          MeshUsage,      ///< Hint about the usage of the mesh, retained in case of update if there is a reallocation.
+    layerMask:      Layer,          ///< Bitfield indicating the rendering layer(s) of this mesh.
+    aabb:           rl.BoundingBox,    ///< Axis-Aligned Bounding Box in local space.
 }
 
 @(default_calling_convention="c", link_prefix="R3D_")
@@ -100,7 +89,7 @@ foreign lib {
     /**
      * @brief Creates a 3D mesh from CPU-side mesh data.
      * @param type Primitive type used to interpret vertex data.
-     * @param data R3D_MeshData containing vertices and indices (cannot be NULL).
+     * @param data R3D_MeshData containing vertices and indices (can be zero initialized).
      * @param aabb Optional pointer to a bounding box. If NULL, it will be computed automatically.
      * @param usage Hint on how the mesh will be used.
      * @return Created R3D_Mesh.

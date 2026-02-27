@@ -303,7 +303,7 @@ foreign lib {
      *
      * Same behavior as R3D_LoadAlbedoMap(), but reads from memory instead of disk.
      *
-     * @param fileType rl.Image format hint (e.g. "png", "jpg").
+     * @param fileType rl.Image format hint (e.g. ".png", ".jpg").
      * @param fileData Pointer to image data.
      * @param dataSize Size of image data in bytes.
      * @param color Multiplicative tint applied in the shader.
@@ -337,7 +337,7 @@ foreign lib {
      *
      * Same behavior as R3D_LoadEmissionMap(), but reads from memory.
      *
-     * @param fileType rl.Image format hint.
+     * @param fileType rl.Image format hint (e.g. ".png", ".jpg").
      * @param fileData Pointer to image data.
      * @param dataSize Size of image data in bytes.
      * @param color Emission color.
@@ -371,7 +371,7 @@ foreign lib {
      *
      * Same behavior as R3D_LoadNormalMap(), but reads from memory.
      *
-     * @param fileType rl.Image format hint.
+     * @param fileType rl.Image format hint (e.g. ".png", ".jpg").
      * @param fileData Pointer to image data.
      * @param dataSize Size of image data in bytes.
      * @param scale Normal intensity multiplier.
@@ -406,7 +406,7 @@ foreign lib {
      *
      * Same behavior as R3D_LoadOrmMap(), but reads from memory.
      *
-     * @param fileType rl.Image format hint.
+     * @param fileType rl.Image format hint (e.g. ".png", ".jpg").
      * @param fileData Pointer to image data.
      * @param dataSize Size of image data in bytes.
      * @param occlusion Occlusion multiplier.

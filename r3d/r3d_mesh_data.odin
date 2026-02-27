@@ -38,6 +38,19 @@ when ODIN_OS == .Windows {
 }
 
 /**
+ * @brief Defines the geometric primitive type.
+ */
+PrimitiveType :: enum u32 {
+    POINTS         = 0, ///< Each vertex represents a single point.
+    LINES          = 1, ///< Each pair of vertices forms an independent line segment.
+    LINE_STRIP     = 2, ///< Connected series of line segments sharing vertices.
+    LINE_LOOP      = 3, ///< Closed loop of connected line segments.
+    TRIANGLES      = 4, ///< Each set of three vertices forms an independent triangle.
+    TRIANGLE_STRIP = 5, ///< Connected strip of triangles sharing vertices.
+    TRIANGLE_FAN   = 6, ///< Fan of triangles sharing the first vertex.
+}
+
+/**
  * @brief Represents a vertex and all its attributes for a mesh.
  */
 Vertex :: struct {
@@ -60,10 +73,12 @@ Vertex :: struct {
  * Think of it as a toolbox for procedural or dynamic mesh generation on the CPU.
  */
 MeshData :: struct {
-    vertices:    [^]Vertex, ///< Pointer to vertex data in CPU memory.
-    indices:     [^]u32,    ///< Pointer to index data in CPU memory.
-    vertexCount: i32,       ///< Number of vertices.
-    indexCount:  i32,       ///< Number of indices.
+    vertices:       [^]Vertex, ///< Pointer to vertex data in CPU memory.
+    indices:        [^]u32,    ///< Pointer to index data in CPU memory.
+    vertexCapacity: i32,       ///< Capacity of vertices.
+    indexCapacity:  i32,       ///< Capacity of indices.
+    vertexCount:    i32,       ///< Number of vertices.
+    indexCount:     i32,       ///< Number of indices.
 }
 
 @(default_calling_convention="c", link_prefix="R3D_")
@@ -80,7 +95,7 @@ foreign lib {
      *
      * @return A new R3D_MeshData instance with allocated memory.
      */
-    CreateMeshData :: proc(vertexCount: i32, indexCount: i32) -> MeshData ---
+    LoadMeshData :: proc(vertexCount: i32, indexCount: i32) -> MeshData ---
 
     /**
      * @brief Releases memory used by a mesh data container.
@@ -323,11 +338,31 @@ foreign lib {
     GenMeshDataCubicmap :: proc(cubicmap: rl.Image, cubeSize: rl.Vector3) -> MeshData ---
 
     /**
+     * @brief Reserves memory for the specified number of vertices and indices.
+     * @param meshData Target mesh data container.
+     * @param vertexCount Number of vertices to reserve space for.
+     * @param indexCount Number of indices to reserve space for.
+     */
+    ReserveMeshData :: proc(meshData: ^MeshData, vertexCount: i32, indexCount: i32) ---
+
+    /**
+     * @brief Shrinks allocated memory to fit the current vertex and index counts.
+     * @param meshData Target mesh data container to shrink.
+     */
+    ShrinkMeshData :: proc(meshData: ^MeshData) ---
+
+    /**
+     * @brief Clears all vertices and indices without releasing allocated memory.
+     * @param meshData Target mesh data container to reset.
+     */
+    ResetMeshData :: proc(meshData: ^MeshData) ---
+
+    /**
      * @brief Creates a deep copy of an existing mesh data container.
      * @param meshData Source mesh data to duplicate.
      * @return A new R3D_MeshData containing a copy of the source data.
      */
-    DuplicateMeshData :: proc(meshData: MeshData) -> MeshData ---
+    CopyMeshData :: proc(meshData: MeshData) -> MeshData ---
 
     /**
      * @brief Merges two mesh data containers into a single one.
@@ -336,6 +371,23 @@ foreign lib {
      * @return A new R3D_MeshData containing the merged geometry.
      */
     MergeMeshData :: proc(a: MeshData, b: MeshData) -> MeshData ---
+
+    /**
+     * @brief Appends vertices and indices to the mesh data container.
+     * @param meshData Target mesh data container.
+     * @param vertices Array of vertices to append.
+     * @param vertexCount Number of vertices to append.
+     * @param indices Array of indices to append.
+     * @param indexCount Number of indices to append.
+     */
+    AppendMeshData :: proc(meshData: ^MeshData, vertices: [^]Vertex, vertexCount: i32, indices: [^]u32, indexCount: i32) ---
+
+    /**
+     * @brief Applies a transformation matrix to all vertices in the mesh data.
+     * @param meshData Target mesh data container.
+     * @param transform Transformation matrix to apply.
+     */
+    TransformMeshData :: proc(meshData: ^MeshData, transform: rl.Matrix) ---
 
     /**
      * @brief Translates all vertices by a given offset.
@@ -381,14 +433,18 @@ foreign lib {
     /**
      * @brief Computes vertex normals from triangle geometry.
      * @param meshData Mesh data to modify.
+     * @param type Primitive type of the mesh. Points and line primitives are not
+     *             supported and will default to a front-facing normal (0, 0, 1).
      */
-    GenMeshDataNormals :: proc(meshData: ^MeshData) ---
+    GenMeshDataNormals :: proc(meshData: ^MeshData, type: PrimitiveType) ---
 
     /**
      * @brief Computes vertex tangents based on existing normals and UVs.
      * @param meshData Mesh data to modify.
+     * @param type Primitive type of the mesh. Points and line primitives are not
+     *             supported and will default to a front-facing tangent (1, 0, 0, 1).
      */
-    GenMeshDataTangents :: proc(meshData: ^MeshData) ---
+    GenMeshDataTangents :: proc(meshData: ^MeshData, type: PrimitiveType) ---
 
     /**
      * @brief Calculates the axis-aligned bounding box of the mesh.
