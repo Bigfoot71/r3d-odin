@@ -277,6 +277,19 @@ foreign lib {
     SetTextureFilter :: proc(filter: rl.TextureFilter) ---
 
     /**
+     * @brief Sets the default texture wrap mode.
+     *
+     * This function only affects textures that are loaded manually for material maps.
+     * Textures loaded automatically during model import will use the wrap mode
+     * defined in the model file itself.
+     *
+     * The default texture wrap mode is `TEXTURE_WRAP_CLAMP`.
+     *
+     * @param wrap The texture wrap mode to apply by default.
+     */
+    SetTextureWrap :: proc(wrap: rl.TextureWrap) ---
+
+    /**
      * @brief Set the working color space for user-provided surface colors and color textures.
      *
      * Defines how all *color inputs* should be interpreted:
