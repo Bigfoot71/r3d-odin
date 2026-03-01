@@ -129,6 +129,6 @@ foreign lib {
      * @param shaders Array of pointers to R3D_ScreenShader objects.
      * @param count Number of shaders in the array.
      */
-    SetScreenShaderChain :: proc(shaders: ^^ScreenShader, count: i32) ---
+    SetScreenShaderChain :: proc(shaders: [^]^ScreenShader, count: i32) ---
 }
 
