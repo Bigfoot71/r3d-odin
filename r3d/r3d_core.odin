@@ -79,7 +79,7 @@ AspectMode :: enum u32 {
 UpscaleMode :: enum u32 {
     NEAREST = 0, ///< Nearest-neighbor upscaling: very fast, but produces blocky pixels.
     LINEAR  = 1, ///< Bilinear upscaling: very fast, smoother than nearest, but can appear blurry.
-    BICUBIC = 2, ///< Bicubic (Catmull-Rom) upscaling: slower, smoother, and less blurry than linear.
+    BICUBIC = 2, ///< Bicubic upscaling: slower, smoother, and less blurry than linear.
     LANCZOS = 3, ///< Lanczos-2 upscaling: preserves more fine details, but is the most expensive.
 }
 
@@ -90,8 +90,9 @@ UpscaleMode :: enum u32 {
  */
 DownscaleMode :: enum u32 {
     NEAREST = 0, ///< Nearest-neighbor downscaling: very fast, but produces aliasing.
-    LINEAR  = 1, ///< Bilinear downscaling: very fast, can serve as a basic form of anti-aliasing (SSAA).
-    BOX     = 2, ///< Box-blur downscaling: uses a simple but effective box blur, slightly more expensive than linear, smooths moiré better.
+    LINEAR  = 1, ///< Bilinear filtering. Fast, may show moire on high-frequency content.
+    RGSS    = 2, ///< 4-sample supersampling. Reduces aliasing and moire, low cost. Recommended default.
+    PDSS    = 3, ///< 16-sample supersampling. Better color accuracy than RGSS, higher cost.
 }
 
 /**
