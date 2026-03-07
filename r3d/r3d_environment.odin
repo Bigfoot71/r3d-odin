@@ -151,6 +151,7 @@ EnvSSGI :: struct {
     stepSize:     f32,  ///< rl.Ray step size (default: 0.125)
     thickness:    f32,  ///< Depth tolerance for valid hits (default: 1.0)
     maxDistance:  f32,  ///< Maximum ray distance (default: 4.0)
+    intensity:    f32,  ///< GI intensity multiplier (default: 3.0)
     fadeStart:    f32,  ///< Distance at which the GI fade begins (default: 8.0)
     fadeEnd:      f32,  ///< Distance at which GI is fully faded (default: 16.0)
     denoiseSteps: i32,  ///< Number of denoiser iterations (default: 5)

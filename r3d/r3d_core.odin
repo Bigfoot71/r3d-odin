@@ -166,17 +166,16 @@ foreign lib {
     GetResolution :: proc(width: ^i32, height: ^i32) ---
 
     /**
-     * @brief Updates the internal resolution.
+     * @brief Sets the internal rendering resolution.
      *
-     * This function changes the internal resolution of the rendering engine. Note that
-     * this process destroys and recreates all framebuffers, which may be a slow operation.
+     * Reallocates all internal render targets to the new resolution.
+     * This operation may cause a stall, this is acceptable when called
+     * infrequently (like window resize events), but should never be called per-frame.
      *
-     * @param width The new width for the internal resolution.
-     * @param height The new height for the internal resolution.
-     *
-     * @warning This function may be slow due to the destruction and recreation of framebuffers.
+     * @param width New internal width in pixels.
+     * @param height New internal height in pixels.
      */
-    UpdateResolution :: proc(width: i32, height: i32) ---
+    SetResolution :: proc(width: i32, height: i32) ---
 
     /**
      * @brief Retrieves the current anti-aliasing mode used for rendering.

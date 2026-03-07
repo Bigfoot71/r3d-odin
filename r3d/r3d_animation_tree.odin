@@ -129,7 +129,7 @@ Add2NodeParams :: struct {
  */
 SwitchNodeParams :: struct {
     synced:      bool, ///< Flag to control input animation nodes synchronization; activated input is reset when false.
-    activeInput: u32,  ///< Active input zero-based index.
+    activeInput: i32,  ///< Active input zero-based index.
     xFadeTime:   f32,  ///< Animation nodes cross fade blending time, in seconds.
 }
 
@@ -154,8 +154,8 @@ AnimationTree :: struct {
     player:          AnimationPlayer,       ///< Animation player and skeleton used by all animation nodes.
     rootNode:        ^AnimationTreeNode,    ///< Pointer to root animation node of the tree.
     nodePool:        ^AnimationTreeNode,    ///< Animation node pool of size nodePoolMaxSize.
-    nodePoolSize:    u32,                   ///< Current animation node pool size.
-    nodePoolMaxSize: u32,                   ///< Maximum number of animation nodes, defined during load.
+    nodePoolSize:    i32,                   ///< Current animation node pool size.
+    nodePoolMaxSize: i32,                   ///< Maximum number of animation nodes, defined during load.
     rootBone:        i32,                   ///< Optional root bone index, -1 if not defined.
     updateCallback:  AnimationTreeCallback, ///< Callback function to receive and modify final animation transformation.
     updateUserData:  rawptr,                ///< Optional user data pointer passed to the callback.
@@ -244,7 +244,7 @@ foreign lib {
      * @param inputIndex Index of the parent node input used for connection.
      * @return True on success; false if parent node or inputIndex is invalid.
      */
-    AddAnimationNode :: proc(parent: ^AnimationTreeNode, node: ^AnimationTreeNode, inputIndex: u32) -> bool ---
+    AddAnimationNode :: proc(parent: ^AnimationTreeNode, node: ^AnimationTreeNode, inputIndex: i32) -> bool ---
 
     /**
      * @brief Creates animation node of type Animation.
@@ -301,7 +301,7 @@ foreign lib {
      * @param params Switch node initial parameters.
      * @return Pointer to created animation node; NULL if maximum number of nodes was exceeded.
      */
-    CreateSwitchNode :: proc(tree: ^AnimationTree, inputCount: u32, params: SwitchNodeParams) -> ^AnimationTreeNode ---
+    CreateSwitchNode :: proc(tree: ^AnimationTree, inputCount: i32, params: SwitchNodeParams) -> ^AnimationTreeNode ---
 
     /**
      * @brief Creates animation node of type State Machine (Stm).
@@ -313,7 +313,7 @@ foreign lib {
      * @param edgesCount Maximum number of edges in the state machine.
      * @return Pointer to created animation node; NULL if maximum number of nodes was exceeded.
      */
-    CreateStmNode :: proc(tree: ^AnimationTree, statesCount: u32, edgesCount: u32) -> ^AnimationTreeNode ---
+    CreateStmNode :: proc(tree: ^AnimationTree, statesCount: i32, edgesCount: i32) -> ^AnimationTreeNode ---
 
     /**
      * @brief Creates animation node of type State Machine (Stm), with option to disable travel feature (enabled by default).
@@ -324,7 +324,7 @@ foreign lib {
      * @param enableTravel Flag to enable or disable travel feature; enabled when set true.
      * @return Pointer to created animation node; NULL if maximum number of nodes was exceeded.
      */
-    CreateStmNodeEx :: proc(tree: ^AnimationTree, statesCount: u32, edgesCount: u32, enableTravel: bool) -> ^AnimationTreeNode ---
+    CreateStmNodeEx :: proc(tree: ^AnimationTree, statesCount: i32, edgesCount: i32, enableTravel: bool) -> ^AnimationTreeNode ---
 
     /**
      * @brief Creates animation node of type State Machine Stop/Done (StmX).
@@ -346,7 +346,7 @@ foreign lib {
      * @param outEdgesCount Number of output edges of the state.
      * @return Index of created state; -1 if maximum number of states was exceeded.
      */
-    CreateStmNodeState :: proc(stmNode: ^AnimationTreeNode, stateNode: ^AnimationTreeNode, outEdgesCount: u32) -> AnimationStmIndex ---
+    CreateStmNodeState :: proc(stmNode: ^AnimationTreeNode, stateNode: ^AnimationTreeNode, outEdgesCount: i32) -> AnimationStmIndex ---
 
     /**
      * @brief Creates edge in a State Machine animation node.
@@ -470,6 +470,6 @@ foreign lib {
      * @param boneNameCount Count of strings in boneNames array.
      * @return Calculated bone mask, or zeroed structure on failure.
      */
-    ComputeBoneMask :: proc(skeleton: ^Skeleton, boneNames: [^]cstring, boneNameCount: u32) -> BoneMask ---
+    ComputeBoneMask :: proc(skeleton: ^Skeleton, boneNames: [^]cstring, boneNameCount: i32) -> BoneMask ---
 }
 
