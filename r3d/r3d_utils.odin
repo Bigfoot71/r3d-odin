@@ -71,7 +71,7 @@ foreign lib {
      *
      * This texture stores octahedral-compressed normals using two 16-bit per-channel RG components.
      *
-     * @note You can find the decoding functions in the embedded shaders, such as 'screen/lighting.fs.glsl'.
+     * @note You can find the decoding functions in 'shaders/include/math.glsl'.
      *
      * @return The normal buffer texture.
      */
@@ -82,7 +82,6 @@ foreign lib {
      *
      * This texture is an R16 texture containing a linear depth value
      * normalized between the near and far clipping planes.
-     * It does not include a stencil buffer.
      *
      * The texture is intended for post-processing effects outside of R3D
      * that require access to linear depth information.
