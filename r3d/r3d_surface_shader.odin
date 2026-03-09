@@ -29,9 +29,9 @@ when ODIN_OS == .Windows {
     }
 } else when ODIN_OS == .Darwin {
     foreign import lib {
-        "darwin/libr3d.a",
+        "/macos/libr3d.a",
         "vendor:raylib/macos/libraylib.a",
-        "darwin/libassimp.a",
+        "/macos/libassimp.a",
         "system:z",
         "system:c++",
     }
