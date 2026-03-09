@@ -129,5 +129,15 @@ foreign lib {
      * @return The current inverse projection matrix.
      */
     GetMatrixInvProjection :: proc() -> rl.Matrix ---
+
+    /**
+     * @brief Retrieves the view-projection matrix.
+     *
+     * This matrix represents the transformation from world space to clip space.
+     * It is updated at the last call to 'R3D_Begin'.
+     *
+     * @return The current view-projection matrix.
+     */
+    GetMatrixViewProjection :: proc() -> rl.Matrix ---
 }
 
