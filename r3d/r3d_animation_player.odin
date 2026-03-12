@@ -58,11 +58,10 @@ AnimationEventCallback :: proc "c" (player: ^AnimationPlayer, eventType: Animati
 /**
  * @brief Describes the playback state of a single animation within a player.
  *
- * Tracks the current time, blending weight, speed, play/pause state, and looping behavior.
+ * Tracks the current time, speed, play/pause state, and looping behavior.
  */
 AnimationState :: struct {
     currentTime: f32,  ///< Current playback time in animation ticks.
-    weight:      f32,  ///< Blending weight; any positive value is valid.
     speed:       f32,  ///< Playback speed; can be negative for reverse playback.
     play:        bool, ///< Whether the animation is currently playing.
     loop:        bool, ///< True to enable looping playback.
@@ -72,15 +71,16 @@ AnimationState :: struct {
 // FORWARD DECLARATIONS
 // ========================================
 AnimationPlayer :: struct {
-    states:        [^]AnimationState,      ///< Array of active animation states, one per animation.
-    animLib:       AnimationLib,           ///< Animation library providing the available animations.
-    skeleton:      Skeleton,               ///< Skeleton to animate.
-    localPose:     [^]rl.Matrix,              ///< Array of bone transforms representing the blended local pose.
-    modelPose:     [^]rl.Matrix,              ///< Array of bone transforms in model space, obtained by hierarchical accumulation.
-    skinBuffer:    [^]rl.Matrix,              ///< Array of final skinning matrices (invBind * modelPose), sent to the GPU.
-    skinTexture:   u32,                    ///< GPU texture ID storing the skinning matrices as a 1D RGBA16F texture.
-    eventCallback: AnimationEventCallback, ///< Callback function to receive animation events.
-    eventUserData: rawptr,                 ///< Optional user data pointer passed to the callback.
+    animLib:         AnimationLib,           ///< Animation library providing the available animations.
+    skeleton:        Skeleton,               ///< Skeleton to animate.
+    states:          [^]AnimationState,      ///< Array of animation states, one per animation.
+    activeAnimIndex: i32,                    ///< Index of the current animation.
+    localPose:       [^]rl.Matrix,              ///< Array of bone transforms representing the blended local pose.
+    modelPose:       [^]rl.Matrix,              ///< Array of bone transforms in model space, obtained by hierarchical accumulation.
+    skinBuffer:      [^]rl.Matrix,              ///< Array of final skinning matrices (invBind * modelPose), sent to the GPU.
+    skinTexture:     u32,                    ///< GPU texture ID storing the skinning matrices as a 1D RGBA16F texture.
+    eventCallback:   AnimationEventCallback, ///< Callback function to receive animation events.
+    eventUserData:   rawptr,                 ///< Optional user data pointer passed to the callback.
 }
 
 @(default_calling_convention="c", link_prefix="R3D_")
@@ -112,13 +112,12 @@ foreign lib {
     IsAnimationPlayerValid :: proc(player: AnimationPlayer) -> bool ---
 
     /**
-     * @brief Returns whether a given animation is currently playing.
+     * @brief Returns whether an animation is currently playing.
      *
      * @param player Animation player.
-     * @param animIndex Index of the animation.
      * @return true if playing, false otherwise.
      */
-    IsAnimationPlaying :: proc(player: AnimationPlayer, animIndex: i32) -> bool ---
+    IsAnimationPlaying :: proc(player: AnimationPlayer) -> bool ---
 
     /**
      * @brief Starts playback of the specified animation.
@@ -129,20 +128,20 @@ foreign lib {
     PlayAnimation :: proc(player: ^AnimationPlayer, animIndex: i32) ---
 
     /**
-     * @brief Pauses the specified animation.
+     * @brief Pauses the current animation.
      *
      * @param player Animation player.
      * @param animIndex Index of the animation to pause.
      */
-    PauseAnimation :: proc(player: ^AnimationPlayer, animIndex: i32) ---
+    PauseAnimation :: proc(player: ^AnimationPlayer) ---
 
     /**
-     * @brief Stops the specified animation and clamps its time.
+     * @brief Stops the current animation and clamps its time.
      *
      * @param player Animation player.
      * @param animIndex Index of the animation to stop.
      */
-    StopAnimation :: proc(player: ^AnimationPlayer, animIndex: i32) ---
+    StopAnimation :: proc(player: ^AnimationPlayer) ---
 
     /**
      * @brief Rewinds the animation to the start or end depending on playback direction.
@@ -150,7 +149,7 @@ foreign lib {
      * @param player Animation player.
      * @param animIndex Index of the animation to rewind.
      */
-    RewindAnimation :: proc(player: ^AnimationPlayer, animIndex: i32) ---
+    RewindAnimation :: proc(player: ^AnimationPlayer) ---
 
     /**
      * @brief Gets the current playback time of an animation.
@@ -169,24 +168,6 @@ foreign lib {
      * @param time Time in animation ticks.
      */
     SetAnimationTime :: proc(player: ^AnimationPlayer, animIndex: i32, time: f32) ---
-
-    /**
-     * @brief Gets the blending weight of an animation.
-     *
-     * @param player Animation player.
-     * @param animIndex Index of the animation.
-     * @return Current weight.
-     */
-    GetAnimationWeight :: proc(player: AnimationPlayer, animIndex: i32) -> f32 ---
-
-    /**
-     * @brief Sets the blending weight of an animation.
-     *
-     * @param player Animation player.
-     * @param animIndex Index of the animation.
-     * @param weight Blending weight to apply.
-     */
-    SetAnimationWeight :: proc(player: ^AnimationPlayer, animIndex: i32, weight: f32) ---
 
     /**
      * @brief Gets the playback speed of an animation.
@@ -228,62 +209,64 @@ foreign lib {
     SetAnimationLoop :: proc(player: ^AnimationPlayer, animIndex: i32, loop: bool) ---
 
     /**
-     * @brief Advances the time of all active animations.
+     * @brief Advances the time of the current animation.
      *
-     * Updates all internal animation timers based on speed and delta time.
+     * Updates animation timer based on speed and delta time.
      * Does NOT recalculate the skeleton pose.
      *
      * @param player Animation player.
      * @param dt Delta time in seconds.
      */
-    AdvanceAnimationPlayerTime :: proc(player: ^AnimationPlayer, dt: f32) ---
+    AdvanceAnimationTime :: proc(player: ^AnimationPlayer, dt: f32) ---
 
     /**
-     * @brief Calculates the current blended local pose of the skeleton.
+     * @brief Computes the local-space transform of each bone for the current animation.
      *
-     * Interpolates keyframes and blends all active animations according to their weights,
-     * but only computes the local transforms of each bone relative to its parent.
-     * Does NOT advance animation time.
+     * Samples and interpolates the current animation keyframes at the current playback time,
+     * and stores the resulting bone transforms in local space into @p player->localPose.
+     * Does NOT advance animation time, and does NOT compute model-space transforms.
      *
      * @param player Animation player whose local pose will be updated.
      */
-    CalculateAnimationPlayerLocalPose :: proc(player: ^AnimationPlayer) ---
+    ComputeAnimationLocalPose :: proc(player: ^AnimationPlayer) ---
 
     /**
-     * @brief Calculates the current blended model (global) pose of the skeleton.
+     * @brief Computes the model-space transform of each bone from the current local pose.
      *
-     * Interpolates keyframes and blends all active animations according to their weights,
-     * but only computes the global transforms of each bone in model space.
-     * This assumes the local pose is already up-to-date.
-     * Does NOT advance animation time.
+     * Traverses the bone hierarchy and accumulates local transforms into model-space matrices,
+     * stored into @p player->modelPose. This assumes @p player->localPose is already up-to-date.
+     * Does NOT sample animation keyframes, and does NOT advance animation time.
      *
      * @param player Animation player whose model pose will be updated.
      */
-    CalculateAnimationPlayerModelPose :: proc(player: ^AnimationPlayer) ---
+    ComputeAnimationModelPose :: proc(player: ^AnimationPlayer) ---
 
     /**
-     * @brief Calculates the current blended skeleton pose (local and model).
+     * @brief Computes both the local and model-space transforms for the current animation.
      *
-     * Interpolates keyframes and blends all active animations according to their weights,
-     * then computes both local and model transforms for the entire skeleton.
+     * Equivalent to calling R3D_ComputeAnimationLocalPose() followed by R3D_ComputeAnimationModelPose().
      * Does NOT advance animation time.
      *
      * @param player Animation player whose local and model poses will be updated.
      */
-    CalculateAnimationPlayerPose :: proc(player: ^AnimationPlayer) ---
+    ComputeAnimationPose :: proc(player: ^AnimationPlayer) ---
 
     /**
-     * @brief Calculates the skinning matrices and uploads them to the GPU.
+     * @brief Computes the final skinning matrices and uploads them to the GPU.
      *
-     * @param player Animation player.
+     * Multiplies each bone's model-space transform by its inverse bind matrix to produce
+     * the skinning matrices, then uploads them to the GPU skin texture.
+     * This assumes @p player->modelPose is already up-to-date.
+     *
+     * @param player Animation player whose skinning matrices will be uploaded.
      */
-    UploadAnimationPlayerPose :: proc(player: ^AnimationPlayer) ---
+    UploadAnimationPose :: proc(player: ^AnimationPlayer) ---
 
     /**
-     * @brief Updates the animation player: calculates and upload blended pose, then advances time.
+     * @brief Updates the animation player: calculates and upload the current pose pose, then advances time.
      *
-     * Equivalent to calling R3D_CalculateAnimationPlayerPose() followed by
-     * R3D_UploadAnimationPlayerPose() and R3D_AdvanceAnimationPlayerTime().
+     * Equivalent to calling R3D_ComputeAnimationLocalPose() followed by
+     * R3D_ComputeAnimationModelPose() and R3D_AdvanceAnimationTime().
      *
      * @param player Animation player.
      * @param dt Delta time in seconds.
