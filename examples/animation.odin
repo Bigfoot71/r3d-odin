@@ -39,7 +39,6 @@ main :: proc() {
     modelPlayer := r3d.LoadAnimationPlayer(model.skeleton, modelAnims)
 
     // Setup animation playing
-    r3d.SetAnimationWeight(&modelPlayer, 0, 1.0)
     r3d.SetAnimationLoop(&modelPlayer, 0, true)
     r3d.PlayAnimation(&modelPlayer, 0)
 
