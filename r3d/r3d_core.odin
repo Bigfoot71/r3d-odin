@@ -9,34 +9,6 @@ package r3d
 
 import rl "vendor:raylib"
 
-when ODIN_OS == .Windows {
-    foreign import lib {
-        "windows/r3d.lib",
-        "vendor:raylib/windows/raylib.lib",
-        "windows/assimp-vc143-mt.lib",
-        "vendor:zlib/libz.lib",
-    }
-} else when ODIN_OS == .Linux {
-    foreign import lib {
-        "linux/libr3d.a",
-        "vendor:raylib/linux/libraylib.a",
-        "linux/libassimp.a",
-        "system:z",
-        "system:stdc++",
-        "system:dl",
-        "system:pthread",
-        "system:m",
-    }
-} else when ODIN_OS == .Darwin {
-    foreign import lib {
-        "/macos/libr3d.a",
-        "vendor:raylib/macos/libraylib.a",
-        "/macos/libassimp.a",
-        "system:z",
-        "system:c++",
-    }
-}
-
 /**
  * @brief Anti-aliasing modes used during rendering.
  *
@@ -384,4 +356,39 @@ Layer :: enum u32 {
     LAYER_15 = 1 << 14,
     LAYER_16 = 1 << 15,
     LAYER_ALL = 0xFFFFFFFF,
+}
+
+/*
+ * NOTE: Full dependency libraries are declared here rather than in all files (import.odin).
+ * The exact cause is unclear, possibly an Odin linker integration issue, but having
+ * all transitive deps (raylib, assimp, system libs) declared in a file that is guaranteed
+ * to have referenced symbols avoids a cascade of undefined references at link time.
+ * To be revisited if a minimal reproducer can be found and reported to Odin.
+ */
+when ODIN_OS == .Windows {
+    foreign import lib {
+        "windows/r3d.lib",
+        "vendor:raylib/windows/raylib.lib",
+        "windows/assimp-vc143-mt.lib",
+        "vendor:zlib/libz.lib",
+    }
+} else when ODIN_OS == .Linux {
+    foreign import lib {
+        "linux/libr3d.a",
+        "vendor:raylib/linux/libraylib.a",
+        "linux/libassimp.a",
+        "system:z",
+        "system:stdc++",
+        "system:dl",
+        "system:pthread",
+        "system:m",
+    }
+} else when ODIN_OS == .Darwin {
+    foreign import lib {
+        "/macos/libr3d.a",
+        "vendor:raylib/macos/libraylib.a",
+        "/macos/libassimp.a",
+        "system:z",
+        "system:c++",
+    }
 }
