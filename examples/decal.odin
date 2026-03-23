@@ -19,7 +19,7 @@ main :: proc() {
     defer r3d.UnloadMesh(plane)
     sphere := r3d.GenMeshSphere(0.5, 64, 64)
     defer r3d.UnloadMesh(sphere)
-    cylinder := r3d.GenMeshCylinder(0.5, 0.5, 1, 64)
+    cylinder := r3d.GenMeshCylinder(0.5, 1, 64)
     defer r3d.UnloadMesh(cylinder)
 
     material := r3d.GetDefaultMaterial()
