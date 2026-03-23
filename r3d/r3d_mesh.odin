@@ -188,14 +188,27 @@ foreign lib {
 
     /**
      * @brief Generate a cylinder mesh.
-     * @param bottomRadius Bottom radius.
-     * @param topRadius Top radius.
+     * @param radius Radius of the cylinder.
      * @param height Height along Y axis.
      * @param slices Radial subdivisions.
      * @return Mesh ready for rendering.
      * @see R3D_GenMeshDataCylinder
      */
-    GenMeshCylinder :: proc(bottomRadius: f32, topRadius: f32, height: f32, slices: i32) -> Mesh ---
+    GenMeshCylinder :: proc(radius: f32, height: f32, slices: i32) -> Mesh ---
+
+    /**
+     * @brief Generate a cylinder, cone or truncated cone mesh.
+     * @param bottomRadius Bottom radius.
+     * @param topRadius Top radius.
+     * @param height Height along Y axis.
+     * @param slices Radial subdivisions.
+     * @param stacks Vertical subdivisions.
+     * @param bottomCap Generate bottom cap.
+     * @param topCap Generate top cap.
+     * @return Mesh ready for rendering.
+     * @see R3D_GenMeshDataCylinderEx
+     */
+    GenMeshCylinderEx :: proc(bottomRadius: f32, topRadius: f32, height: f32, slices: i32, stacks: i32, bottomCap: bool, topCap: bool) -> Mesh ---
 
     /**
      * @brief Generate a capsule mesh.
