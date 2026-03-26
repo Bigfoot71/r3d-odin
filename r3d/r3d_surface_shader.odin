@@ -23,6 +23,9 @@ when ODIN_OS == .Windows {
     }
 }
 
+// ========================================
+// OPAQUE TYPES
+// ========================================
 SurfaceShader :: struct {}
 
 @(default_calling_convention="c", link_prefix="R3D_")
@@ -50,7 +53,30 @@ foreign lib {
     LoadSurfaceShaderFromMemory :: proc(code: cstring) -> ^SurfaceShader ---
 
     /**
+     * @brief Creates an alias of an existing surface shader.
+     *
+     * The alias shares the same compiled program shaders as the original but holds
+     * its own independent sampler and uniform data. This allows the same shader
+     * to be used multiple times within a single frame with different values,
+     * for example when several materials rely on the same shader but each draw
+     * call requires distinct uniform values or texture bindings.
+     *
+     * @note The alias does not own the program shaders. Unloading the original shader
+     *       while an alias is still in use results in undefined behavior.
+     *       Always unload all aliases before unloading the original.
+     *
+     * @param shader The original surface shader to alias.
+     * @return Pointer to the alias, or NULL on failure.
+     */
+    LoadSurfaceShaderAlias :: proc(shader: ^SurfaceShader) -> ^SurfaceShader ---
+
+    /**
      * @brief Unloads and destroys a surface shader.
+     *
+     * If the shader owns its program shaders (i.e. it was created with @ref R3D_LoadSurfaceShader
+     * or @ref R3D_LoadSurfaceShaderFromMemory), they are deleted. Aliases created from this
+     * shader via @ref R3D_LoadSurfaceShaderAlias must be unloaded beforehand, as they
+     * share the same programs and will be left with dangling references.
      *
      * @param shader Surface shader to unload.
      */

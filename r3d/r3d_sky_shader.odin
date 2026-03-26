@@ -23,6 +23,9 @@ when ODIN_OS == .Windows {
     }
 }
 
+// ========================================
+// OPAQUE TYPES
+// ========================================
 SkyShader :: struct {}
 
 @(default_calling_convention="c", link_prefix="R3D_")
@@ -52,7 +55,29 @@ foreign lib {
     LoadSkyShaderFromMemory :: proc(code: cstring) -> ^SkyShader ---
 
     /**
+     * @brief Creates an alias of an existing sky shader.
+     *
+     * The alias shares the same compiled program shaders as the original but holds
+     * its own independent sampler and uniform data. A typical use case is to
+     * pre-configure several aliases with different uniforms or textures, avoiding
+     * the need to reconfigure the shader on every skybox switch.
+     *
+     * @note The alias does not own the program shaders. Unloading the original shader
+     *       while an alias is still in use results in undefined behavior.
+     *       Always unload all aliases before unloading the original.
+     *
+     * @param shader The original sky shader to alias.
+     * @return Pointer to the alias, or NULL on failure.
+     */
+    LoadSkyShaderAlias :: proc(shader: ^SkyShader) -> ^SkyShader ---
+
+    /**
      * @brief Unloads and destroys a sky shader.
+     *
+     * If the shader owns its program shaders (i.e. it was created with @ref R3D_LoadSkyShader
+     * or @ref R3D_LoadSkyShaderFromMemory), they are deleted. Aliases created from this
+     * shader via @ref R3D_LoadSkyShaderAlias must be unloaded beforehand, as they
+     * share the same programs and will be left with dangling references.
      *
      * @param shader Sky shader to unload.
      */
