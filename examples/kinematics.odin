@@ -57,7 +57,7 @@ main :: proc() {
     // Slope obstacle
     slopeMeshData := r3d.GenMeshDataSlope(2, 2, 2, {0, 1, -1})
     defer r3d.UnloadMeshData(slopeMeshData)
-    slopeMesh := r3d.LoadMesh(.TRIANGLES, slopeMeshData, nil, .STATIC_MESH)
+    slopeMesh := r3d.LoadMesh(.TRIANGLES, slopeMeshData, nil)
     defer r3d.UnloadMesh(slopeMesh)
     slopeTransform := rl.MatrixTranslate(0, 1, 5)
 
