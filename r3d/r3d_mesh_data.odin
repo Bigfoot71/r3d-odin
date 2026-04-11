@@ -40,13 +40,14 @@ PrimitiveType :: enum u32 {
  * @brief Represents a vertex and all its attributes for a mesh.
  */
 Vertex :: struct {
-    position: rl.Vector3, /**< The 3D position of the vertex in object space. */
-    texcoord: rl.Vector2, /**< The 2D texture coordinates (UV) for mapping textures. */
-    normal:   rl.Vector3, /**< The normal vector used for lighting calculations. */
-    color:    rl.Color,   /**< Vertex color, in RGBA32. */
-    tangent:  rl.Vector4, /**< The tangent vector, used in normal mapping (often with a handedness in w). */
-    boneIds:  [4]i32,  /**< Indices of up to 4 bones that influence this vertex (for skinning). */
-    weights:  [4]f32,  /**< Corresponding bone weights (should sum to 1.0). Defines the influence of each bone. */
+    position: rl.Vector3, ///< The 3D position of the vertex in object space.
+    texcoord: rl.Vector2, ///< The 2D texture coordinates (UV) for mapping textures.
+    normal:   rl.Vector3, ///< The normal vector used for lighting calculations.
+    color:    rl.Color,   ///< Vertex color, in RGBA32.
+    tangent:  rl.Vector4, ///< The tangent vector, used in normal mapping (often with a handedness in w).
+    boneIds:  [4]u8,   ///< Indices of up to 4 bones that influence this vertex (for skinning).
+    weights:  [4]u8,   ///< Corresponding bone weights (should sum to 255). Defines the influence of each bone.
+    pad:      [4]u8,   ///< Not used, reserved.
 }
 
 /**

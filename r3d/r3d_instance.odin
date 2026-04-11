@@ -52,6 +52,20 @@ foreign lib {
     UnloadInstanceBuffer :: proc(buffer: InstanceBuffer) ---
 
     /**
+     * @brief Grow the GPU buffers of an instance buffer to a new capacity.
+     *
+     * Only expands; if newCapacity <= buffer->capacity the call is a no-op.
+     * All attribute buffers present in buffer->flags are reallocated and
+     * if keepData is true, their existing content is copied to the new
+     * buffers before the old ones are deleted.
+     *
+     * @param buffer Instance buffer to resize (updated in place).
+     * @param newCapacity Desired minimum capacity in number of instances.
+     * @param keepData If true, preserves existing instance data.
+     */
+    ResizeInstanceBuffer :: proc(buffer: ^InstanceBuffer, newCapacity: i32, keepData: bool) ---
+
+    /**
      * @brief Upload a contiguous range of instance data.
      * @param flag Attribute being updated (single bit).
      * @param offset First instance index.

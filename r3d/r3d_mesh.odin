@@ -24,15 +24,6 @@ when ODIN_OS == .Windows {
 }
 
 /**
- * @brief Hint on how a mesh will be used.
- */
-MeshUsage :: enum u32 {
-    STATIC_MESH   = 0, ///< Will never be updated.
-    DYNAMIC_MESH  = 1, ///< Will be updated occasionally.
-    STREAMED_MESH = 2, ///< Will be update on each frame.
-}
-
-/**
  * @brief Shadow casting modes for objects.
  *
  * Controls how an object interacts with the shadow mapping system.
@@ -58,14 +49,14 @@ ShadowCastMode :: enum u32 {
  * Can represent a static or skinned mesh.
  */
 Mesh :: struct {
-    vao, vbo, ebo:  u32,            ///< OpenGL objects handles.
-    vertexCapacity: i32,            ///< Number of vertices allocated in GPU buffers.
-    indexCapacity:  i32,            ///< Number of indices allocated in GPU buffers.
+    vertexOffset:   i32,            ///< Offset in the internal VBO.
+    vertexCapacity: i32,            ///< Number of vertices allocated in the internal VBO.
     vertexCount:    i32,            ///< Number of vertices currently in use.
+    indexOffset:    i32,            ///< Offset in the internal EBO.
+    indexCapacity:  i32,            ///< Number of indices allocated in the internal EBO.
     indexCount:     i32,            ///< Number of indices currently in use.
     shadowCastMode: ShadowCastMode, ///< Shadow casting mode for the mesh.
     primitiveType:  PrimitiveType,  ///< Type of primitive that constitutes the vertices.
-    usage:          MeshUsage,      ///< Hint about the usage of the mesh, retained in case of update if there is a reallocation.
     layerMask:      Layer,          ///< Bitfield indicating the rendering layer(s) of this mesh.
     aabb:           rl.BoundingBox,    ///< Axis-Aligned Bounding Box in local space.
 }
@@ -77,11 +68,10 @@ foreign lib {
      * @param type Primitive type used to interpret vertex data.
      * @param data R3D_MeshData containing vertices and indices (can be zero initialized).
      * @param aabb Optional pointer to a bounding box. If NULL, it will be computed automatically.
-     * @param usage Hint on how the mesh will be used.
      * @return Created R3D_Mesh.
      * @note The function copies all vertex and index data into GPU buffers.
      */
-    LoadMesh :: proc(type: PrimitiveType, data: MeshData, aabb: ^rl.BoundingBox, usage: MeshUsage) -> Mesh ---
+    LoadMesh :: proc(type: PrimitiveType, data: MeshData, aabb: ^rl.BoundingBox) -> Mesh ---
 
     /**
      * @brief Destroys a 3D mesh and frees its resources.
