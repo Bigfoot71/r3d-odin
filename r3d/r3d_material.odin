@@ -198,6 +198,7 @@ Material :: struct {
     blendMode:        BlendMode,        ///< Blend mode (default: MIX)
     cullMode:         CullMode,         ///< Face culling mode (default: BACK)
     unlit:            bool,             ///< If true, material does not participate in lighting (default: false)
+    priority:         i32,              ///< Render order priority; lower values are drawn first (default: 0)
     shader:           ^SurfaceShader,   ///< Custom shader applied to the material (default: NULL)
 }
 
