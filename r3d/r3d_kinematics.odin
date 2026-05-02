@@ -24,6 +24,19 @@ when ODIN_OS == .Windows {
 }
 
 /**
+ * @brief Oriented bounding box (OBB).
+ *
+ * Defined by a center point, three orthogonal axes, and half-extents along each axis.
+ */
+OrientedBox :: struct {
+    center:      rl.Vector3,
+    axisX:       rl.Vector3,
+    axisY:       rl.Vector3,
+    axisZ:       rl.Vector3,
+    halfExtents: rl.Vector3,
+}
+
+/**
  * @brief Capsule shape defined by two endpoints and radius
  */
 Capsule :: struct {
@@ -54,6 +67,11 @@ SweepCollision :: struct {
 
 @(default_calling_convention="c", link_prefix="R3D_")
 foreign lib {
+    /**
+     * @brief Compute an oriented bounding box from an AABB and transform.
+     */
+    GetOrientedBox :: proc(aabb: rl.BoundingBox, transform: rl.Matrix) -> OrientedBox ---
+
     /**
      * @brief Check if capsule intersects with box
      * @param capsule Capsule shape
