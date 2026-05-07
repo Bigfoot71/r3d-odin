@@ -101,8 +101,8 @@ main :: proc() {
         }
 
         // Check grounded
-        isGrounded := r3d.IsCapsuleGroundedBox(capsule, 0.01, groundBox, nil) ||
-                      r3d.IsCapsuleGroundedMesh(capsule, 0.3, slopeMeshData, slopeTransform, nil)
+        isGrounded := r3d.CheckCapsuleSupportBoundingBox(capsule, 0.01, {0, -1, 0}, groundBox, nil) ||
+                      r3d.CheckCapsuleSupportMesh(capsule, 0.3, {0, -1, 0}, slopeMeshData, slopeTransform, nil)
 
         // Jump and apply gravity
         if isGrounded && rl.IsKeyPressed(.SPACE) do velocity.y = JUMP_FORCE
