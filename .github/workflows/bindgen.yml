@@ -1,30 +1,44 @@
 name: Update Bindings
 
 on:
-  workflow_run:
-    workflows: ["Generate Odin Bindings"]
-    types: [completed]
-    branches: [master]
-    repositories: ["Bigfoot71/r3d-odin-bindgen"]
+  schedule:
+    - cron: '0 6 * * *'
   workflow_dispatch:
-    inputs:
-      run_id:
-        description: 'Run ID from r3d-odin-bindgen workflow'
-        required: true
-        type: string
 
 jobs:
   update:
     runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout r3d-odin repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.BINDGEN_PAT }}
+
+      # === Check for new bindgen run =====================================
+
+      - name: Check for new successful run in r3d-odin-bindgen
+        id: check
+        run: |
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/Bigfoot71/r3d-odin-bindgen/actions/workflows/generate-binding.yml/runs?status=success&branch=master&per_page=1")
+
+          LATEST_RUN_ID=$(echo "$RESPONSE" | jq -r '.workflow_runs[0].id')
+          LATEST_SHA=$(echo "$RESPONSE" | jq -r '.workflow_runs[0].head_sha')
+          LAST_RUN_ID=$(cat .last-bindgen-run-id 2>/dev/null || echo "")
+
+          echo "latest_run_id=$LATEST_RUN_ID" >> $GITHUB_OUTPUT
+          echo "latest_sha=$LATEST_SHA" >> $GITHUB_OUTPUT
+          echo "changed=$( [ "$LATEST_RUN_ID" != "$LAST_RUN_ID" ] && echo true || echo false )" >> $GITHUB_OUTPUT
+
+      - name: No new bindgen run detected
+        if: steps.check.outputs.changed == 'false'
+        run: |
+          echo "r3d-odin-bindgen has not produced a new run since last update, skipping."
+          exit 0
+
+      # === Download & update ============================================
 
       - name: Clean existing bindings
         run: |
@@ -34,12 +48,12 @@ jobs:
       - name: Download bindings artifact
         uses: dawidd6/action-download-artifact@v3
         with:
-          github_token: ${{ secrets.BINDGEN_PAT }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: generate-binding.yml
           repo: Bigfoot71/r3d-odin-bindgen
           name: r3d-odin-bindings
           path: r3d/
-          run_id: ${{ github.event.workflow_run.id || inputs.run_id }}
+          run_id: ${{ steps.check.outputs.latest_run_id }}
 
       - name: Check for changes
         id: changes
@@ -49,6 +63,8 @@ jobs:
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
+
+      # === Test =========================================================
 
       - name: Setup Odin
         if: steps.changes.outputs.has_changes == 'true'
@@ -79,15 +95,25 @@ jobs:
           odin check examples/sun.odin -file
           odin check examples/transparency.odin -file
 
-      - name: Commit and push changes
+      # === Commit =======================================================
+
+      - name: Commit and push
         if: steps.changes.outputs.has_changes == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add r3d/
-          git commit -m "Auto-update bindings from r3d-odin-bindgen@${{ github.event.workflow_run.head_sha || 'manual' }}"
+
+          echo "${{ steps.check.outputs.latest_run_id }}" > .last-bindgen-run-id
+          git add .last-bindgen-run-id r3d/
+          git commit -m "Update bindings from r3d-odin-bindgen@${{ steps.check.outputs.latest_sha }}"
           git push origin master
 
       - name: No changes detected
         if: steps.changes.outputs.has_changes == 'false'
-        run: echo "No changes in bindings, skipping tests and commit"
+        run: |
+          echo "${{ steps.check.outputs.latest_run_id }}" > .last-bindgen-run-id
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .last-bindgen-run-id
+          git commit -m "chore: track bindgen run ${{ steps.check.outputs.latest_run_id }}" || echo "Nothing to commit"
+          git push origin master || echo "Nothing to push"
