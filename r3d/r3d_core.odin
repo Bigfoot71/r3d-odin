@@ -10,6 +10,30 @@ package r3d
 import rl "vendor:raylib"
 
 /**
+ * @brief Configuration hints used to customize R3D before initialization.
+ *
+ * Hints must be set via R3D_SetHint() before calling R3D_Init().
+ * Any hint not explicitly set falls back to its default value.
+ *
+ * @note Some hints may be clamped internally, accordingly to hardware limits.
+ */
+Hint :: enum u32 {
+    MESH_VERTEX_BUFFER_CAPACITY = 0,  ///< Initial vertex capacity of the global VBO. Default: 65'536
+    MESH_INDEX_BUFFER_CAPACITY  = 1,  ///< Initial index capacity of the global EBO. Default: 131'072
+    MESH_STREAMING_CAPACITY     = 2,  ///< Initial capacity for tracking freed mesh slots, relevant only for meshes loaded/unloaded at runtime. Default: 128
+    DRAW_CALL_CAPACITY          = 3,  ///< Initial capacity of the CPU-side draw call list. Default: 1024
+    FORWARD_LIGHT_PER_MESH      = 4,  ///< Max lights per mesh in forward pass. Default: 16
+    PROBE_MAX_ACTIVE            = 5,  ///< Max probes rendered simultaneously. Default: 8
+    PROBE_CAPTURE_SIZE          = 6,  ///< Probe capture cubemap face size (px). Default: 256
+    SHADOW_DIR_SIZE             = 7,  ///< Directional light shadow map size (px). Default: 4096
+    SHADOW_SPOT_SIZE            = 8,  ///< Spot light shadow map size (px). Default: 2048
+    SHADOW_OMNI_SIZE            = 9,  ///< Omni light shadow map size (px). Default: 2048
+    IBL_IRRADIANCE_SIZE         = 10, ///< Irradiance cubemap face size, shared by ambient IBL and probes (px). Default: 32
+    IBL_PREFILTER_SIZE          = 11, ///< Prefiltered cubemap face size, shared by ambient IBL and probes (px). Default: 128
+    COUNT                       = 12, ///< Sentinel, not a valid hint
+}
+
+/**
  * @brief Anti-aliasing modes used during rendering.
  *
  * Anti-aliasing reduces visible jagged edges (aliasing artifacts)
@@ -106,6 +130,18 @@ ColorSpace :: enum u32 {
 
 @(default_calling_convention="c", link_prefix="R3D_")
 foreign lib {
+    /**
+     * @brief Sets a configuration hint.
+     *
+     * Must be called before R3D_Init().
+     */
+    SetHint :: proc(hint: Hint, value: i32) ---
+
+    /**
+     * @brief Returns the effective value of a hint.
+     */
+    GetHint :: proc(hint: Hint) -> i32 ---
+
     /**
      * @brief Initializes the rendering engine.
      *
