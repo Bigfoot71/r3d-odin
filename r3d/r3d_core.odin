@@ -12,7 +12,7 @@ import rl "vendor:raylib"
 /**
  * @brief Configuration hints used to customize R3D before initialization.
  *
- * Hints must be set via R3D_SetHint() before calling R3D_Init().
+ * Hints must be set via @ref R3D_SetHint() before calling @ref R3D_Init().
  * Any hint not explicitly set falls back to its default value.
  *
  * @note Some hints may be clamped internally, accordingly to hardware limits.
@@ -133,7 +133,7 @@ foreign lib {
     /**
      * @brief Sets a configuration hint.
      *
-     * Must be called before R3D_Init().
+     * Must be called before @ref R3D_Init().
      */
     SetHint :: proc(hint: Hint, value: i32) ---
 
