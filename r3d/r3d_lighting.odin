@@ -320,7 +320,7 @@ foreign lib {
      * Specular intensity affects how shiny surfaces appear when reflecting the light.
      * Higher specular values result in stronger and sharper highlights on reflective surfaces.
      *
-     * Default: 0.5f
+     * Default: 1.0f
      *
      * @param id The ID of the light.
      * @param specular The new specular intensity value to set for the light.
