@@ -5,7 +5,7 @@ import r3d "../r3d"
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Skybox example")
+    rl.InitWindow(1152, 648, "[r3d] - Skybox example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -15,7 +15,6 @@ main :: proc() {
 
     // Create sphere mesh
     sphere := r3d.GenMeshSphere(0.5, 32, 64)
-    defer r3d.UnloadMesh(sphere)
 
     // Define procedural skybox parameters
     skyParams := r3d.PROCEDURAL_SKY_BASE
@@ -34,19 +33,13 @@ main :: proc() {
 
     // Load and generate skyboxes
     skyPanorama := r3d.LoadCubemap("./resources/panorama/sky.png", .AUTO_DETECT)
-    defer r3d.UnloadCubemap(skyPanorama)
     skyProcedural := r3d.GenProceduralSky(1024, skyParams)
-    defer r3d.UnloadCubemap(skyProcedural)
     skyCustom := r3d.GenCustomSky(512, shader)
-    defer r3d.UnloadCubemap(skyCustom)
 
     // Generate ambient maps
     ambientPanorama := r3d.GenAmbientMap(skyPanorama, {.ILLUMINATION, .REFLECTION})
-    defer r3d.UnloadAmbientMap(ambientPanorama)
     ambientProcedural := r3d.GenAmbientMap(skyProcedural, {.ILLUMINATION, .REFLECTION})
-    defer r3d.UnloadAmbientMap(ambientProcedural)
     ambientCustom := r3d.GenAmbientMap(skyCustom, {.ILLUMINATION, .REFLECTION})
-    defer r3d.UnloadAmbientMap(ambientCustom)
 
     // Store skies/ambients
     backgrounds: [3]r3d.EnvBackground
@@ -68,8 +61,8 @@ main :: proc() {
 
     // Set default sky/ambient maps
     env := r3d.GetEnvironment()
-    env.background = backgrounds[0]
-    env.ambient = ambients[0]
+    env.background.sky = skyPanorama
+    env.ambient._map = ambientPanorama
 
     // Set tonemapping
     env.tonemap.mode = .AGX
@@ -90,28 +83,33 @@ main :: proc() {
         rl.UpdateCamera(&camera, rl.CameraMode.FREE)
 
         rl.BeginDrawing()
-            rl.ClearBackground(rl.RAYWHITE)
+        rl.ClearBackground(rl.RAYWHITE)
 
-            if rl.IsMouseButtonPressed(.RIGHT) do currentSky += 1
-            if rl.IsMouseButtonPressed(.LEFT)  do currentSky -= 1
-            currentSky = (currentSky + 3) % 3
+        currentSky += i32(rl.IsMouseButtonPressed(.RIGHT)) - i32(rl.IsMouseButtonPressed(.LEFT))
+        currentSky = (currentSky + 3) % 3
 
-            env := r3d.GetEnvironment()
-            env.background = backgrounds[currentSky]
-            env.ambient = ambients[currentSky]
+        env.background = backgrounds[currentSky]
+        env.ambient = ambients[currentSky]
 
-            // Draw sphere grid
-            r3d.Begin(camera)
-                for x in 0..=8 {
-                    for y in 0..=8 {
-                        material := r3d.GetDefaultMaterial()
-                        material.orm.roughness = rl.Remap(f32(y), 0.0, 8.0, 0.0, 1.0)
-                        material.orm.metalness = rl.Remap(f32(x), 0.0, 8.0, 0.0, 1.0)
-                        r3d.DrawMesh(sphere, material, {f32(x - 4) * 1.25, f32(y - 4) * 1.25, 0.0}, 1.0)
-                    }
+        // Draw sphere grid
+        r3d.Begin(camera)
+            for x in 0..=8 {
+                for y in 0..=8 {
+                    material := r3d.MATERIAL_BASE
+                    material.orm.roughness = rl.Remap(f32(y), 0.0, 8.0, 0.0, 1.0)
+                    material.orm.metalness = rl.Remap(f32(x), 0.0, 8.0, 0.0, 1.0)
+                    r3d.DrawMesh(sphere, material, {f32(x - 4) * 1.25, f32(y - 4) * 1.25, 0.0}, 1.0)
                 }
-            r3d.End()
+            }
+        r3d.End()
 
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadAmbientMap(ambientProcedural)
+    r3d.UnloadAmbientMap(ambientPanorama)
+    r3d.UnloadCubemap(skyProcedural)
+    r3d.UnloadCubemap(skyPanorama)
+    r3d.UnloadMesh(sphere)
 }

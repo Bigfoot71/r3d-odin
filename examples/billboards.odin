@@ -5,7 +5,7 @@ import r3d "../r3d"
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Billboards example")
+    rl.InitWindow(1152, 648, "[r3d] - Billboards example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -22,17 +22,14 @@ main :: proc() {
 
     // Create ground mesh and material
     meshGround := r3d.GenMeshPlane(200, 200, 1, 1)
-    defer r3d.UnloadMesh(meshGround)
     matGround := r3d.GetDefaultMaterial()
     matGround.albedo.color = rl.GREEN
 
     // Create billboard mesh and material
     meshBillboard := r3d.GenMeshQuad(1.0, 1.0, 1, 1, {0.0, 0.0, 1.0})
-    defer r3d.UnloadMesh(meshBillboard)
     meshBillboard.shadowCastMode = .ON_DOUBLE_SIDED
 
     matBillboard := r3d.GetDefaultMaterial()
-    defer r3d.UnloadMaterial(matBillboard)
     matBillboard.albedo = r3d.LoadAlbedoMap("./resources/images/tree.png", rl.WHITE)
     matBillboard.billboardMode = .Y_AXIS
 
@@ -52,37 +49,38 @@ main :: proc() {
     r3d.UnmapInstances(instances, {.POSITION, .SCALE})
 
     // Setup directional light with shadows
-    light := r3d.CreateLight(.DIR)
-    r3d.SetLightDirection(light, {-1, -1, -1})
-    r3d.SetShadowDepthBias(light, 0.01)
-    r3d.EnableShadow(light)
-    r3d.EnableLight(light)
-    r3d.SetLightRange(light, 32.0)
+    light := r3d.CreateDirLight({-1, -1, -1}, rl.WHITE, 1.0)
+    shadow := r3d.LoadShadowMap(.DIR)
 
     // Setup camera
     camera: rl.Camera3D = {
         position = {0, 5, 0},
-        target = {0, 5, -1},
-        up = {0, 1, 0},
-        fovy = 60,
+        target   = {0, 5, -1},
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     // Capture mouse
     rl.DisableCursor()
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         rl.UpdateCamera(&camera, rl.CameraMode.FREE)
 
         rl.BeginDrawing()
             rl.ClearBackground(rl.RAYWHITE)
 
             r3d.Begin(camera)
+                r3d.PushLightEx(light, shadow, true)
                 r3d.DrawMesh(meshGround, matGround, {0, 0, 0}, 1.0)
                 r3d.DrawMeshInstanced(meshBillboard, matBillboard, instances, 64)
             r3d.End()
 
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadMaterial(matBillboard)
+    r3d.UnloadMesh(meshBillboard)
+    r3d.UnloadMesh(meshGround)
 }

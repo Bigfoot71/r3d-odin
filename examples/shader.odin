@@ -5,7 +5,7 @@ import r3d "../r3d"
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Shader example")
+    rl.InitWindow(1152, 648, "[r3d] - Shader example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -20,61 +20,58 @@ main :: proc() {
 
     // Create meshes
     plane := r3d.GenMeshPlane(1000, 1000, 1, 1)
-    defer r3d.UnloadMesh(plane)
     torus := r3d.GenMeshTorus(0.5, 0.1, 32, 16)
-    defer r3d.UnloadMesh(torus)
 
     // Create material
     material := r3d.GetDefaultMaterial()
     material.shader = r3d.LoadSurfaceShader("./resources/shaders/material.glsl")
-    defer r3d.UnloadSurfaceShader(material.shader)
 
     // Generate a texture for custom sampler
     image := rl.GenImageChecked(512, 512, 16, 32, rl.WHITE, rl.BLACK)
     texture := rl.LoadTextureFromImage(image)
-    defer rl.UnloadTexture(texture)
     rl.UnloadImage(image)
 
-    // Set custom sampler
+    // Set material custom uniform/sampler
     r3d.SetSurfaceShaderSampler(material.shader, "u_texture", texture)
 
     // Load a screen shader
     shader := r3d.LoadScreenShader("./resources/shaders/screen.glsl")
-    defer r3d.UnloadScreenShader(shader)
-    shaderPtr := shader
-    r3d.SetScreenShaderChain(.OUTPUT, &shaderPtr, 1)
+    r3d.SetScreenShaderChain(.OUTPUT, &shader, 1)
+
+    // Set screen custom uniforms
+    timeScale: f32 = 2.5
+    r3d.SetScreenShaderUniform(shader, "u_time_scale", &timeScale)
 
     // Create light
-    light := r3d.CreateLight(.SPOT)
-    r3d.SetLightTarget(light, {0, 10, 5}, {0, 0, 0})
-    r3d.EnableShadow(light)
-    r3d.EnableLight(light)
+    light := r3d.CreateSpotLight({0, 10, 5}, {0, -1, -0.5}, 50.0, rl.WHITE, 1.0)
+    shadow := r3d.LoadShadowMap(.SPOT)
+    shadow.softness = 4.0
 
     // Setup camera
     camera: rl.Camera3D = {
         position = {0, 2, 2},
-        target = {0, 0, 0},
-        up = {0, 1, 0},
-        fovy = 60,
+        target   = {0, 0, 0},
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         rl.UpdateCamera(&camera, rl.CameraMode.ORBITAL)
 
         rl.BeginDrawing()
             rl.ClearBackground(rl.RAYWHITE)
-
-            time := 2.0 * f32(rl.GetTime())
-            r3d.SetScreenShaderUniform(shader, "u_time", &time)
-            r3d.SetSurfaceShaderUniform(material.shader, "u_time", &time)
-
             r3d.Begin(camera)
-                r3d.DrawMesh(plane, r3d.GetDefaultMaterial(), {0, -0.5, 0}, 1.0)
+                r3d.PushLightEx(light, shadow, true)
+                r3d.DrawMesh(plane, r3d.MATERIAL_BASE, {0, -0.5, 0}, 1.0)
                 r3d.DrawMesh(torus, material, {0, 0, 0}, 1.0)
             r3d.End()
-
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadSurfaceShader(material.shader)
+    r3d.UnloadScreenShader(shader)
+    r3d.UnloadMesh(torus)
+    r3d.UnloadMesh(plane)
 }

@@ -11,7 +11,7 @@ INSTANCE_COUNT :: X_INSTANCES * Y_INSTANCES
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - DoF example")
+    rl.InitWindow(1152, 648, "[r3d] - DoF example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -29,13 +29,10 @@ main :: proc() {
     env.dof.maxBlurSize = 20.0
 
     // Create directional light
-    light := r3d.CreateLight(.DIR)
-    r3d.SetLightDirection(light, {0, -1, 0})
-    r3d.EnableLight(light)
+    light := r3d.CreateDirLight({0, -1, 0}, rl.WHITE, 1.0)
 
     // Create sphere mesh and default material
     meshSphere := r3d.GenMeshSphere(0.2, 64, 64)
-    defer r3d.UnloadMesh(meshSphere)
     matDefault := r3d.GetDefaultMaterial()
 
     // Generate instance matrices and colors
@@ -44,7 +41,6 @@ main :: proc() {
     offsetZ := (Y_INSTANCES * spacing) / 2.0
     idx := 0
     instances := r3d.LoadInstanceBuffer(INSTANCE_COUNT, {.POSITION, .COLOR})
-    defer r3d.UnloadInstanceBuffer(instances)
     positions := cast([^]rl.Vector3)r3d.MapInstances(instances, {.POSITION}, false)
     colors := cast([^]rl.Color)r3d.MapInstances(instances, {.COLOR}, false)
     for x in 0..<X_INSTANCES {
@@ -59,14 +55,13 @@ main :: proc() {
     // Setup camera
     camDefault: rl.Camera3D = {
         position = {0, 2, 2},
-        target = {0, 0, 0},
-        up = {0, 1, 0},
-        fovy = 60,
+        target   = {0, 0, 0},
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         delta := rl.GetFrameTime()
 
         // Rotate camera
@@ -79,21 +74,17 @@ main :: proc() {
         mousePos := rl.GetMousePosition()
         focusPoint := 0.5 + (5.0 - (mousePos.y / f32(rl.GetScreenHeight())) * 5.0)
         focusScale := 0.5 + (5.0 - (mousePos.x / f32(rl.GetScreenWidth())) * 5.0)
-        env := r3d.GetEnvironment()
         env.dof.focusPoint = focusPoint
         env.dof.focusScale = focusScale
 
         mouseWheel := rl.GetMouseWheelMove()
         if mouseWheel != 0.0 {
-            env.dof.maxBlurSize = env.dof.maxBlurSize + mouseWheel * 0.1
+            maxBlur := env.dof.maxBlurSize
+            env.dof.maxBlurSize = maxBlur + mouseWheel * 0.1
         }
 
         if rl.IsKeyPressed(.F1) {
-            if r3d.GetOutputMode() == .DOF {
-                r3d.SetOutputMode(.SCENE)
-            } else {
-                r3d.SetOutputMode(.DOF)
-            }
+            r3d.SetOutputMode(r3d.GetOutputMode() == .SCENE ? r3d.OutputMode.DOF : r3d.OutputMode.SCENE)
         }
 
         rl.BeginDrawing()
@@ -101,14 +92,15 @@ main :: proc() {
 
             // Render scene
             r3d.Begin(camDefault)
+                r3d.PushLight(light)
                 r3d.DrawMeshInstanced(meshSphere, matDefault, instances, INSTANCE_COUNT)
             r3d.End()
 
             // Display DoF values
             dofText := fmt.ctprintf(
-                "Focus Point: %.2f\nFocus Scale: %.2f\nMax Blur Size: %.2f\nDebug Mode: %v",
+                "Focus Point: %.2f\nFocus Scale: %.2f\nMax Blur Size: %.2f\nDebug Mode: %d",
                 env.dof.focusPoint, env.dof.focusScale,
-                env.dof.maxBlurSize, r3d.GetOutputMode() == .DOF,
+                env.dof.maxBlurSize, i32(r3d.GetOutputMode() == .SCENE),
             )
             rl.DrawText(dofText, 10, 30, 20, {255, 255, 255, 127})
 
@@ -124,4 +116,8 @@ main :: proc() {
 
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadInstanceBuffer(instances)
+    r3d.UnloadMesh(meshSphere)
 }

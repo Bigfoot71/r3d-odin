@@ -6,7 +6,7 @@ import r3d "../r3d"
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Bloom example")
+    rl.InitWindow(1152, 648, "[r3d] - Bloom example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -25,7 +25,6 @@ main :: proc() {
 
     // Create cube mesh and material
     cube := r3d.GenMeshCube(1.0, 1.0, 1.0)
-    defer r3d.UnloadMesh(cube)
     material := r3d.GetDefaultMaterial()
     hueCube: f32 = 0.0
     material.emission.color = rl.ColorFromHSV(hueCube, 1.0, 1.0)
@@ -41,8 +40,7 @@ main :: proc() {
     }
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         delta := rl.GetFrameTime()
         rl.UpdateCamera(&camera, rl.CameraMode.ORBITAL)
 
@@ -53,13 +51,11 @@ main :: proc() {
         }
 
         // Adjust bloom parameters
-        env := r3d.GetEnvironment()
-        
         intensityDir := i32(is_key_down_delay(.RIGHT)) - i32(is_key_down_delay(.LEFT))
-        adjust_bloom_param(&env.bloom.intensity, intensityDir, 0.01, 0.0, math.F32_MAX)
+        adjust_bloom_param(&env.bloom.intensity, intensityDir, 0.01, 0.0, math.inf_f32(1))
 
         radiusDir := i32(is_key_down_delay(.UP)) - i32(is_key_down_delay(.DOWN))
-        adjust_bloom_param(&env.bloom.filterRadius, radiusDir, 0.1, 0.0, math.F32_MAX)
+        adjust_bloom_param(&env.bloom.filterRadius, radiusDir, 0.1, 0.0, math.inf_f32(1))
 
         levelDir := i32(rl.IsMouseButtonDown(.RIGHT)) - i32(rl.IsMouseButtonDown(.LEFT))
         adjust_bloom_param(&env.bloom.levels, levelDir, 0.01, 0.0, 1.0)
@@ -84,6 +80,8 @@ main :: proc() {
 
         rl.EndDrawing()
     }
+
+    r3d.UnloadMesh(cube)
 }
 
 is_key_down_delay :: proc(key: rl.KeyboardKey) -> bool {

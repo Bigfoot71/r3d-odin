@@ -13,7 +13,7 @@ randf :: proc(min: f32, max: f32) -> f32 {
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Many lights example")
+    rl.InitWindow(1152, 648, "[r3d] - Many lights example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -28,14 +28,11 @@ main :: proc() {
 
     // Create plane and cube meshes
     plane := r3d.GenMeshPlane(100, 100, 1, 1)
-    defer r3d.UnloadMesh(plane)
     cube := r3d.GenMeshCube(0.5, 0.5, 0.5)
-    defer r3d.UnloadMesh(cube)
     material := r3d.GetDefaultMaterial()
 
     // Allocate transforms for all spheres
     instances := r3d.LoadInstanceBuffer(GRID_SIZE * GRID_SIZE, {.POSITION})
-    defer r3d.UnloadInstanceBuffer(instances)
     positions := cast([^]rl.Vector3)r3d.MapInstances(instances, {.POSITION}, false)
     for x in -50..<50 {
         for z in -50..<50 {
@@ -47,47 +44,53 @@ main :: proc() {
     // Create lights
     lights: [NUM_LIGHTS]r3d.Light
     for i in 0..<NUM_LIGHTS {
-        lights[i] = r3d.CreateLight(.OMNI)
-        r3d.SetLightPosition(lights[i], {randf(-50.0, 50.0), randf(1.0, 5.0), randf(-50.0, 50.0)})
-        r3d.SetLightColor(lights[i], rl.ColorFromHSV(randf(0.0, 360.0), 1.0, 1.0))
-        r3d.SetLightRange(lights[i], randf(8.0, 16.0))
-        r3d.EnableLight(lights[i])
+        lights[i] = r3d.CreateOmniLight({0, 0, 0}, 0.0, rl.WHITE, 1.0)
+        lights[i].position = {randf(-50.0, 50.0), randf(1.0, 5.0), randf(-50.0, 50.0)}
+        lights[i].color    = rl.ColorFromHSV(randf(0.0, 360.0), 1.0, 1.0)
+        lights[i].range    = randf(8.0, 16.0)
     }
 
     // Setup camera
     camera: rl.Camera3D = {
         position = {0, 10, 10},
-        target = {0, 0, 0},
-        up = {0, 1, 0},
-        fovy = 60,
+        target   = {0, 0, 0},
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         rl.UpdateCamera(&camera, rl.CameraMode.ORBITAL)
 
         rl.BeginDrawing()
-            rl.ClearBackground(rl.RAYWHITE)
+        rl.ClearBackground(rl.RAYWHITE)
 
-            // Draw scene
-            r3d.Begin(camera)
-                r3d.DrawMesh(plane, material, {0, -0.25, 0}, 1.0)
-                r3d.DrawMeshInstanced(cube, material, instances, GRID_SIZE*GRID_SIZE)
-            r3d.End()
-
-            // Optionally show lights shapes
-            if rl.IsKeyDown(.F) {
-                rl.BeginMode3D(camera)
-                    for i in 0..<NUM_LIGHTS {
-                        r3d.DrawLightDebug(lights[i])
-                    }
-                rl.EndMode3D()
+        // Draw scene
+        r3d.Begin(camera)
+            for i in 0..<NUM_LIGHTS {
+                r3d.PushLight(lights[i])
             }
+            r3d.DrawMesh(plane, material, {0, -0.25, 0}, 1.0)
+            r3d.DrawMeshInstanced(cube, material, instances, GRID_SIZE*GRID_SIZE)
+        r3d.End()
 
-            rl.DrawFPS(10, 10)
-            rl.DrawText("Press 'F' to show the lights", 10, rl.GetScreenHeight()-34, 24, rl.BLACK)
+        // Optionally show lights shapes
+        if rl.IsKeyDown(.F) {
+            rl.BeginMode3D(camera)
+            for i in 0..<NUM_LIGHTS {
+                r3d.DrawLightDebug(lights[i])
+            }
+            rl.EndMode3D()
+        }
+
+        rl.DrawFPS(10, 10)
+        rl.DrawText("Press 'F' to show the lights", 10, rl.GetScreenHeight()-34, 24, rl.BLACK)
 
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadInstanceBuffer(instances)
+    r3d.UnloadMesh(cube)
+    r3d.UnloadMesh(plane)
 }

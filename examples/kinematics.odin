@@ -17,13 +17,14 @@ box_center :: proc(box: rl.BoundingBox) -> rl.Vector3 {
 }
 
 main :: proc() {
-    rl.InitWindow(800, 450, "[r3d] - Kinematics Example")
+    rl.InitWindow(1152, 648, "[r3d] - Kinematics Example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
     r3d.Init(rl.GetScreenWidth(), rl.GetScreenHeight())
     defer r3d.Close()
     r3d.SetTextureFilter(.ANISOTROPIC_8X)
+    r3d.SetTextureWrap(.REPEAT)
 
     sky := r3d.GenProceduralSky(1024, r3d.PROCEDURAL_SKY_BASE)
     ambient := r3d.GenAmbientMap(sky, {.ILLUMINATION, .REFLECTION})
@@ -31,12 +32,9 @@ main :: proc() {
     env.background.sky = sky
     env.ambient._map = ambient
 
-    light := r3d.CreateLight(.DIR)
-    r3d.SetLightDirection(light, {-1, -1, -1})
-    r3d.SetLightRange(light, 16.0)
-    r3d.EnableLight(light)
-    r3d.EnableShadow(light)
-    r3d.SetShadowDepthBias(light, 0.005)
+    // Setup directional light with shadows
+    light := r3d.CreateDirLight({-1, -1, -1}, rl.WHITE, 1.0)
+    shadow := r3d.LoadShadowMap(.DIR)
 
     // Load materials
     baseAlbedo := r3d.LoadAlbedoMap("./resources/images/placeholder.png", rl.WHITE)
@@ -51,20 +49,16 @@ main :: proc() {
 
     // Ground
     groundMesh := r3d.GenMeshPlane(1000, 1000, 1, 1)
-    defer r3d.UnloadMesh(groundMesh)
     groundBox: rl.BoundingBox = {min = {-500, -1, -500}, max = {500, 0, 500}}
 
     // Slope obstacle
     slopeMeshData := r3d.GenMeshDataSlope(2, 2, 2, {0, 1, -1})
-    defer r3d.UnloadMeshData(slopeMeshData)
     slopeMesh := r3d.LoadMesh(.TRIANGLES, slopeMeshData, nil)
-    defer r3d.UnloadMesh(slopeMesh)
     slopeTransform := rl.MatrixTranslate(0, 1, 5)
 
     // Player capsule
     capsule: r3d.Capsule = {start = {0, 0.5, 0}, end = {0, 1.5, 0}, radius = 0.5}
     capsMesh := r3d.GenMeshCapsule(0.5, 1.0, 64, 32)
-    defer r3d.UnloadMesh(capsMesh)
     velocity: rl.Vector3 = {0, 0, 0}
 
     // Camera
@@ -72,15 +66,14 @@ main :: proc() {
     cameraPitch: f32 = 30.0
     camera: rl.Camera3D = {
         position = {0, 5, 5},
-        target = capsule_center(capsule),
-        up = {0, 1, 0},
-        fovy = 60,
+        target   = capsule_center(capsule),
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     rl.DisableCursor()
 
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         dt := rl.GetFrameTime()
 
         // Camera rotation
@@ -91,7 +84,7 @@ main :: proc() {
         // Movement input relative to camera
         dx := i32(rl.IsKeyDown(.A)) - i32(rl.IsKeyDown(.D))
         dz := i32(rl.IsKeyDown(.W)) - i32(rl.IsKeyDown(.S))
-        
+
         moveInput: rl.Vector3 = {0, 0, 0}
         if dx != 0 || dz != 0 {
             angleRad := cameraAngle * rl.DEG2RAD
@@ -106,8 +99,11 @@ main :: proc() {
 
         // Jump and apply gravity
         if isGrounded && rl.IsKeyPressed(.SPACE) do velocity.y = JUMP_FORCE
-        if !isGrounded do velocity.y += GRAVITY * dt
-        else if velocity.y < 0 do velocity.y = 0
+        if !isGrounded {
+            velocity.y += GRAVITY * dt
+        } else if velocity.y < 0 {
+            velocity.y = 0
+        }
 
         // Calculate total movement
         movement := moveInput * MOVE_SPEED * dt
@@ -140,9 +136,10 @@ main :: proc() {
         rl.BeginDrawing()
             rl.ClearBackground(rl.BLACK)
             r3d.Begin(camera)
+                r3d.PushLightEx(light, shadow, true)
                 r3d.DrawMeshPro(slopeMesh, slopeMat, slopeTransform)
                 r3d.DrawMesh(groundMesh, groundMat, {0, 0, 0}, 1.0)
-                r3d.DrawMesh(capsMesh, r3d.GetDefaultMaterial(), capsule_center(capsule), 1.0)
+                r3d.DrawMesh(capsMesh, r3d.MATERIAL_BASE, capsule_center(capsule), 1.0)
             r3d.End()
             rl.DrawFPS(10, 10)
             rl.DrawText(
@@ -152,4 +149,10 @@ main :: proc() {
             )
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadMeshData(slopeMeshData)
+    r3d.UnloadMesh(groundMesh)
+    r3d.UnloadMesh(slopeMesh)
+    r3d.UnloadMesh(capsMesh)
 }

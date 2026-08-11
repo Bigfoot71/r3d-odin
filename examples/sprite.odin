@@ -20,7 +20,7 @@ get_texcoord_scale_offset :: proc(xFrameCount: int, yFrameCount: int, currentFra
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Sprite example")
+    rl.InitWindow(1152, 648, "[r3d] - Sprite example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -28,6 +28,7 @@ main :: proc() {
     r3d.Init(rl.GetScreenWidth(), rl.GetScreenHeight())
     defer r3d.Close()
     r3d.SetTextureFilter(.POINT)
+    r3d.SetTextureWrap(.REPEAT)
 
     // Set background/ambient color
     env := r3d.GetEnvironment()
@@ -37,33 +38,27 @@ main :: proc() {
 
     // Create ground mesh and material
     meshGround := r3d.GenMeshPlane(200, 200, 1, 1)
-    defer r3d.UnloadMesh(meshGround)
     matGround := r3d.GetDefaultMaterial()
     matGround.albedo.color = rl.GREEN
 
     // Create sprite mesh and material
     meshSprite := r3d.GenMeshQuad(1.0, 1.0, 1, 1, {0, 0, 1})
-    defer r3d.UnloadMesh(meshSprite)
     meshSprite.shadowCastMode = .ON_DOUBLE_SIDED
 
     matSprite := r3d.GetDefaultMaterial()
-    defer r3d.UnloadMaterial(matSprite)
     matSprite.albedo = r3d.LoadAlbedoMap("./resources/images/spritesheet.png", rl.WHITE)
     matSprite.billboardMode = .Y_AXIS
 
-    // Setup spotlight
-    light := r3d.CreateLight(.SPOT)
-    r3d.SetLightTarget(light, {0, 10, 10}, {0, 0, 0})
-    r3d.SetLightRange(light, 64.0)
-    r3d.EnableShadow(light)
-    r3d.EnableLight(light)
+    // Create light
+    light := r3d.CreateSpotLight({0, 10, 10}, {0, -1, -1}, 32.0, rl.WHITE, 1.0)
+    shadow := r3d.LoadShadowMap(.SPOT)
 
     // Setup camera
     camera: rl.Camera3D = {
         position = {0, 2, 5},
-        target = {0, 0.5, 0},
-        up = {0, 1, 0},
-        fovy = 45,
+        target   = {0, 0.5, 0},
+        up       = {0, 1, 0},
+        fovy     = 45,
     }
 
     // Bird data
@@ -71,8 +66,7 @@ main :: proc() {
     birdDirX: f32 = 1.0
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         // Update bird position
         birdPrev := birdPos
         time := f32(rl.GetTime())
@@ -94,10 +88,16 @@ main :: proc() {
 
             // Draw scene
             r3d.Begin(camera)
+                r3d.PushLightEx(light, shadow, true)
                 r3d.DrawMesh(meshGround, matGround, {0, -0.5, 0}, 1.0)
                 r3d.DrawMesh(meshSprite, matSprite, {birdPos.x, birdPos.y, 0}, 1.0)
             r3d.End()
 
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadMaterial(matSprite)
+    r3d.UnloadMesh(meshSprite)
+    r3d.UnloadMesh(meshGround)
 }

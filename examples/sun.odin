@@ -9,7 +9,7 @@ INSTANCE_COUNT :: X_INSTANCES * Y_INSTANCES
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Sun example")
+    rl.InitWindow(1152, 648, "[r3d] - Sun example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -20,15 +20,11 @@ main :: proc() {
 
     // Create meshes and material
     plane := r3d.GenMeshPlane(1000, 1000, 1, 1)
-    defer r3d.UnloadMesh(plane)
     sphere := r3d.GenMeshSphere(0.35, 16, 32)
-    defer r3d.UnloadMesh(sphere)
     material := r3d.GetDefaultMaterial()
-    defer r3d.UnloadMaterial(material)
 
     // Create transforms for instanced spheres
     instances := r3d.LoadInstanceBuffer(INSTANCE_COUNT, {.POSITION})
-    defer r3d.UnloadInstanceBuffer(instances)
     positions := cast([^]rl.Vector3)r3d.MapInstances(instances, {.POSITION}, false)
     spacing: f32 = 1.5
     offsetX := (X_INSTANCES * spacing) / 2.0
@@ -50,37 +46,39 @@ main :: proc() {
     ambientMap := r3d.GenAmbientMap(skybox, {.ILLUMINATION, .REFLECTION})
     env.ambient._map = ambientMap
 
-    // Create directional light with shadows
-    light := r3d.CreateLight(.DIR)
-    r3d.SetLightDirection(light, {-1, -1, -1})
-    r3d.EnableLight(light)
-    r3d.SetLightRange(light, 16.0)
-    r3d.SetShadowSoftness(light, 2.0)
-    r3d.SetShadowDepthBias(light, 0.01)
-    r3d.EnableShadow(light)
+    // Setup lights with shadows
+    light := r3d.CreateDirLight({-1, -1, -1}, rl.WHITE, 1.0)
+    shadow := r3d.LoadShadowMap(.DIR)
+    shadow.softness = 3.0
 
     // Setup camera
     camera: rl.Camera3D = {
         position = {0, 1, 0},
-        target = {1, 1.25, 1},
-        up = {0, 1, 0},
-        fovy = 60,
+        target   = {1, 1.25, 1},
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     // Capture mouse
     rl.DisableCursor()
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         rl.UpdateCamera(&camera, rl.CameraMode.FREE)
 
         rl.BeginDrawing()
             rl.ClearBackground(rl.RAYWHITE)
             r3d.Begin(camera)
+                r3d.PushLightEx(light, shadow, true)
                 r3d.DrawMesh(plane, material, {0, -0.5, 0}, 1.0)
                 r3d.DrawMeshInstanced(sphere, material, instances, INSTANCE_COUNT)
             r3d.End()
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadInstanceBuffer(instances)
+    r3d.UnloadMaterial(material)
+    r3d.UnloadMesh(sphere)
+    r3d.UnloadMesh(plane)
 }

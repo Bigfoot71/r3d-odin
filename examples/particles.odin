@@ -7,14 +7,14 @@ import r3d "../r3d"
 MAX_PARTICLES :: 4096
 
 Particle :: struct {
-    pos: rl.Vector3,
-    vel: rl.Vector3,
+    pos:  rl.Vector3,
+    vel:  rl.Vector3,
     life: f32,
 }
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Particles example")
+    rl.InitWindow(1152, 648, "[r3d] - Particles example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -24,40 +24,35 @@ main :: proc() {
 
     // Set environment
     env := r3d.GetEnvironment()
-    env.background.color = {4, 4, 4, 255}
+    env.background.color = {4, 4, 4, 0}
     env.bloom.mode = .ADDITIVE
 
     // Generate a gradient as emission texture for our particles
     image := rl.GenImageGradientRadial(64, 64, 0.0, rl.WHITE, rl.BLACK)
     texture := rl.LoadTextureFromImage(image)
-    defer rl.UnloadTexture(texture)
     rl.UnloadImage(image)
 
     // Generate a quad mesh for our particles
     mesh := r3d.GenMeshQuad(0.25, 0.25, 1, 1, {0, 0, 1})
-    defer r3d.UnloadMesh(mesh)
 
     // Setup particle material
     material := r3d.GetDefaultMaterial()
-    defer r3d.UnloadMaterial(material)
-    material.billboardMode = .FRONT
-    material.blendMode = .ADDITIVE
-    material.albedo.texture = r3d.GetBlackTexture()
-    material.emission.color = {255, 0, 0, 255}
+    material.billboardMode    = .FRONT
+    material.blendMode        = .ADDITIVE
+    material.albedo.texture   = r3d.GetBlackTexture()
+    material.emission.color   = {255, 0, 0, 255}
     material.emission.texture = texture
-    material.emission.energy = 1.0
+    material.emission.energy  = 1.0
 
     // Create particle instance buffer
     instances := r3d.LoadInstanceBuffer(MAX_PARTICLES, {.POSITION})
-    defer r3d.UnloadInstanceBuffer(instances)
 
     // Setup camera
     camera: rl.Camera3D = {
         position = {-7, 7, -7},
-        target = {0, 1, 0},
-        up = {0, 1, 0},
-        fovy = 60.0,
-        projection = .PERSPECTIVE,
+        target   = {0, 1, 0},
+        up       = {0, 1, 0},
+        fovy     = 60.0,
     }
 
     // CPU buffer for storing particles
@@ -65,8 +60,7 @@ main :: proc() {
     positions: [MAX_PARTICLES]rl.Vector3
     particleCount: i32 = 0
 
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         dt := rl.GetFrameTime()
         rl.UpdateCamera(&camera, rl.CameraMode.ORBITAL)
 
@@ -110,4 +104,9 @@ main :: proc() {
             rl.DrawFPS(10, 10)
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadInstanceBuffer(instances)
+    r3d.UnloadMaterial(material)
+    r3d.UnloadMesh(mesh)
 }

@@ -5,7 +5,7 @@ import r3d "../r3d"
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Animation example")
+    rl.InitWindow(1152, 648, "[r3d] - Animation example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -28,7 +28,7 @@ main :: proc() {
 
     // Setup tonemapping
     env.tonemap.mode = .FILMIC
-    env.tonemap.exposure = 1.5
+    env.tonemap.exposure = 0.75
 
     // Generate a ground plane and load the animated model
     plane := r3d.GenMeshPlane(10, 10, 1, 1)
@@ -53,23 +53,22 @@ main :: proc() {
     r3d.UnmapInstances(instances, {.POSITION})
 
     // Setup lights with shadows
-    light := r3d.CreateLight(.DIR)
-    r3d.SetLightDirection(light, {-1.0, -1.0, -1.0})
-    r3d.EnableLight(light)
-    r3d.SetLightRange(light, 10.0)
-    r3d.EnableShadow(light)
+    light := r3d.CreateDirLight({-1, -1, -1}, rl.WHITE, 1.0)
+    light.range = 20.0
+
+    shadow := r3d.LoadShadowMap(.DIR)
+    shadow.softness = 2.0
 
     // Setup camera
     camera: rl.Camera3D = {
         position = {0, 1.5, 3.0},
-        target = {0, 0.75, 0.0},
-        up = {0, 1, 0},
-        fovy = 60
+        target   = {0, 0.75, 0.0},
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         delta := rl.GetFrameTime()
 
         rl.UpdateCamera(&camera, rl.CameraMode.ORBITAL)
@@ -78,7 +77,8 @@ main :: proc() {
         rl.BeginDrawing()
             rl.ClearBackground(rl.RAYWHITE)
             r3d.Begin(camera)
-                r3d.DrawMesh(plane, r3d.GetDefaultMaterial(), {0, 0, 0}, 1.0)
+                r3d.PushLightEx(light, shadow, true)
+                r3d.DrawMesh(plane, r3d.MATERIAL_BASE, {0, 0, 0}, 1.0)
                 r3d.DrawAnimatedModel(model, modelPlayer, {0, 0, 0}, 1.25)
                 r3d.DrawAnimatedModelInstanced(model, modelPlayer, instances, 4)
             r3d.End()

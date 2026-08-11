@@ -24,7 +24,7 @@ get_upscale_mode_name :: proc(mode: r3d.UpscaleMode) -> cstring {
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Resize example")
+    rl.InitWindow(1152, 648, "[r3d] - Resize example")
     defer rl.CloseWindow()
     rl.SetWindowState({.WINDOW_RESIZABLE})
     rl.SetTargetFPS(60)
@@ -35,7 +35,6 @@ main :: proc() {
 
     // Create sphere mesh and materials
     sphere := r3d.GenMeshSphere(0.5, 64, 64)
-    defer r3d.UnloadMesh(sphere)
     materials: [5]r3d.Material
     for i in 0..<5 {
         materials[i] = r3d.GetDefaultMaterial()
@@ -43,16 +42,14 @@ main :: proc() {
     }
 
     // Setup directional light
-    light := r3d.CreateLight(.DIR)
-    r3d.SetLightDirection(light, {0, 0, -1})
-    r3d.EnableLight(light)
+    light := r3d.CreateDirLight({0, 0, -1}, rl.WHITE, 1.0)
 
     // Setup camera
     camera: rl.Camera3D = {
         position = {0, 2, 2},
-        target = {0, 0, 0},
-        up = {0, 1, 0},
-        fovy = 60,
+        target   = {0, 0, 0},
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     // Current blit state
@@ -60,8 +57,7 @@ main :: proc() {
     upscale: r3d.UpscaleMode = .NEAREST
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         rl.UpdateCamera(&camera, rl.CameraMode.ORBITAL)
 
         // Toggle aspect keep
@@ -81,6 +77,7 @@ main :: proc() {
 
             // Draw spheres
             r3d.Begin(camera)
+                r3d.PushLight(light)
                 for i in 0..<5 {
                     r3d.DrawMesh(sphere, materials[i], {f32(i) - 2, 0, 0}, 1.0)
                 }
@@ -98,4 +95,7 @@ main :: proc() {
 
         rl.EndDrawing()
     }
+
+    // Cleanup
+    r3d.UnloadMesh(sphere)
 }

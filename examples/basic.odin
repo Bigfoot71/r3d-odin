@@ -5,7 +5,7 @@ import r3d "../r3d"
 
 main :: proc() {
     // Initialize window
-    rl.InitWindow(800, 450, "[r3d] - Basic example")
+    rl.InitWindow(1152, 648, "[r3d] - Basic example")
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
@@ -23,28 +23,27 @@ main :: proc() {
     env.ambient.color = {10, 10, 10, 255}
 
     // Create light
-    light := r3d.CreateLight(.SPOT)
-    r3d.SetLightTarget(light, {0, 10, 5}, {0, 0, 0})
-    r3d.EnableLight(light)
-    r3d.EnableShadow(light)
+    light := r3d.CreateSpotLight({0, 10, 5}, {0, -1, -0.5}, 50.0, rl.WHITE, 1.0)
+    shadow := r3d.LoadShadowMap(.SPOT)
+    shadow.softness = 4.0
 
     // Setup camera
     camera: rl.Camera3D = {
         position = {0, 2, 2},
-        target = {0, 0, 0},
-        up = {0, 1, 0},
-        fovy = 60
+        target   = {0, 0, 0},
+        up       = {0, 1, 0},
+        fovy     = 60,
     }
 
     // Main loop
-    for !rl.WindowShouldClose()
-    {
+    for !rl.WindowShouldClose() {
         rl.UpdateCamera(&camera, rl.CameraMode.ORBITAL)
 
         rl.BeginDrawing()
             rl.ClearBackground(rl.RAYWHITE)
 
             r3d.Begin(camera)
+                r3d.PushLightEx(light, shadow, false)
                 r3d.DrawMesh(plane, material, {0, -0.5, 0}, 1.0)
                 r3d.DrawMesh(sphere, material, {0, 0, 0}, 1.0)
             r3d.End()
