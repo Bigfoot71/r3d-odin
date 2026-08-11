@@ -18,19 +18,19 @@ import rl "vendor:raylib"
  * @note Some hints may be clamped internally, accordingly to hardware limits.
  */
 Hint :: enum u32 {
-    MESH_VERTEX_BUFFER_CAPACITY = 0,  ///< Initial vertex capacity of the global VBO. Default: 65'536
-    MESH_INDEX_BUFFER_CAPACITY  = 1,  ///< Initial index capacity of the global EBO. Default: 131'072
-    MESH_STREAMING_CAPACITY     = 2,  ///< Initial capacity for tracking freed mesh slots, relevant only for meshes loaded/unloaded at runtime. Default: 128
-    DRAW_CALL_CAPACITY          = 3,  ///< Initial capacity of the CPU-side draw call list. Default: 1024
-    FORWARD_LIGHT_PER_MESH      = 4,  ///< Max lights per mesh in forward pass. Default: 16
-    PROBE_MAX_ACTIVE            = 5,  ///< Max probes rendered simultaneously. Default: 8
-    PROBE_CAPTURE_SIZE          = 6,  ///< Probe capture cubemap face size (px). Default: 256
-    SHADOW_DIR_SIZE             = 7,  ///< Directional light shadow map size (px). Default: 4096
-    SHADOW_SPOT_SIZE            = 8,  ///< Spot light shadow map size (px). Default: 2048
-    SHADOW_OMNI_SIZE            = 9,  ///< Omni light shadow map size (px). Default: 2048
-    IBL_IRRADIANCE_SIZE         = 10, ///< Irradiance cubemap face size, shared by ambient IBL and probes (px). Default: 32
-    IBL_PREFILTER_SIZE          = 11, ///< Prefiltered cubemap face size, shared by ambient IBL and probes (px). Default: 128
-    COUNT                       = 12, ///< Sentinel, not a valid hint
+    MESH_VERTEX_BUFFER_CAPACITY   = 0,  ///< Initial vertex capacity of the global VBO. Default: 65'536
+    MESH_INDEX_BUFFER_CAPACITY    = 1,  ///< Initial index capacity of the global EBO. Default: 131'072
+    MESH_STREAMING_CAPACITY       = 2,  ///< Initial capacity for tracking freed mesh slots, relevant only for meshes loaded/unloaded at runtime. Default: 128
+    DRAW_CALL_CAPACITY            = 3,  ///< Initial capacity of the CPU-side draw call list. Default: 1024
+    FORWARD_LIGHT_PER_MESH        = 4,  ///< Max lights per mesh in forward pass. Default: 16
+    PROBE_ILLUMINATION_MAX_ACTIVE = 5,  ///< Max illumination probes rendered simultaneously. Default: 32
+    PROBE_REFLECTION_MAX_ACTIVE   = 6,  ///< Max reflection probes rendered simultaneously. Default: 8
+    SHADOW_DIR_SIZE               = 7,  ///< Directional light shadow map size (px). Default: 4096
+    SHADOW_SPOT_SIZE              = 8,  ///< Spot light shadow map size (px). Default: 2048
+    SHADOW_OMNI_SIZE              = 9,  ///< Omni light shadow map size (px). Default: 2048
+    IBL_IRRADIANCE_SIZE           = 10, ///< Irradiance cubemap face size, shared by ambient IBL and probes (px). Default: 32
+    IBL_PREFILTER_SIZE            = 11, ///< Prefiltered cubemap face size, shared by ambient IBL and probes (px). Default: 128
+    COUNT                         = 12, ///< Sentinel, not a valid hint
 }
 
 /**
@@ -108,24 +108,6 @@ OutputMode :: enum u32 {
     SSR      = 9,
     BLOOM    = 10,
     DOF      = 11,
-}
-
-/**
- * @brief Specifies the color space for user-provided colors and color textures.
- *
- * This enum defines how colors are interpreted for material inputs:
- * - Surface colors (e.g., albedo or emission tint)
- * - rl.Color textures (albedo, emission maps)
- *
- * Lighting values (direct or indirect light) are always linear and
- * are not affected by this setting.
- *
- * Used with `R3D_SetColorSpace()` to control whether input colors
- * should be treated as linear or sRGB.
- */
-ColorSpace :: enum u32 {
-    LINEAR = 0, ///< Linear color space: values are used as-is.
-    SRGB   = 1, ///< sRGB color space: values are converted to linear on load.
 }
 
 @(default_calling_convention="c", link_prefix="R3D_")
@@ -296,25 +278,6 @@ foreign lib {
      * @param wrap The texture wrap mode to apply by default.
      */
     SetTextureWrap :: proc(wrap: rl.TextureWrap) ---
-
-    /**
-     * @brief Set the working color space for user-provided surface colors and color textures.
-     *
-     * Defines how all *color inputs* should be interpreted:
-     * - surface colors provided in materials (e.g. albedo/emission tints)
-     * - color textures such as albedo and emission maps
-     *
-     * When set to sRGB, these values are converted to linear before shading.
-     * When set to linear, values are used as-is.
-     *
-     * This does NOT affect lighting inputs (direct or indirect light),
-     * which are always expected to be provided in linear space.
-     *
-     * The default color space is `R3D_COLORSPACE_SRGB`.
-     *
-     * @param space rl.Color space to use for color inputs (linear or sRGB).
-     */
-    SetColorSpace :: proc(space: ColorSpace) ---
 }
 
 /**
