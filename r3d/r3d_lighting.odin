@@ -109,33 +109,10 @@ foreign lib {
      * This function is only relevant for spotlights and omni-lights.
      *
      * @note This function should be called while using the default 3D rendering mode of raylib,
-     *       not with R3D's rendering mode. It uses raylib's 3D drawing functions to render the light's shape.
+     *       not with r3d's rendering mode. It uses raylib's 3D drawing functions to render the light's shape.
      *
      * @param light The light to visualize (see R3D_Light).
      */
     DrawLightDebug :: proc(light: Light) ---
-
-    /**
-     * @brief Converts a luminous flux to an energy factor.
-     *
-     * Computes the illuminance in lux at the given reference distance from an isotropic
-     * point source: `energy = lumens / (4 * pi * distance * distance)`
-     *
-     * @param lumens The luminous flux in lumens.
-     * @param referenceDistance The reference distance in scene units (1 unit = 1 meter).
-     * @return The corresponding energy factor.
-     */
-    LumensToEnergy :: proc(lumens: f32, referenceDistance: f32) -> f32 ---
-
-    /**
-     * @brief Converts an energy factor back to a luminous flux.
-     *
-     * Inverse of @ref R3D_LumensToEnergy: `lumens = energy * 4 * pi * distance * distance`
-     *
-     * @param energy The energy factor.
-     * @param referenceDistance The reference distance in scene units (1 unit = 1 meter).
-     * @return The corresponding luminous flux in lumens.
-     */
-    EnergyToLumens :: proc(energy: f32, referenceDistance: f32) -> f32 ---
 }
 
