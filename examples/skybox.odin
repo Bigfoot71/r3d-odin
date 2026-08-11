@@ -44,7 +44,7 @@ main :: proc() {
     // Store skies/ambients
     backgrounds: [3]r3d.EnvBackground
     ambients: [3]r3d.EnvAmbient
-    currentSky := 0
+    currentSky: i32 = 0
 
     for i in 0..<3 {
         backgrounds[i].energy = 1.0
