@@ -37,8 +37,14 @@ main :: proc() {
             .SNORM16,  // rotation quaternion
             .FLOAT16,  // scale
             .UNORM8,   // color
+            .FLOAT32,  // custom (unused)
         },
-        flags = {.POSITION, .ROTATION, .SCALE, .COLOR},
+        flags = {
+            .POSITION,
+            .ROTATION,
+            .SCALE,
+            .COLOR
+        },
     }
 
     instances := r3d.LoadInstanceBufferEx(INSTANCE_COUNT, layout)
