@@ -98,7 +98,6 @@ EnvSSAO :: struct {
     sampleCount: i32,  ///< Number of samples to compute SSAO (default: 16)
     intensity:   f32,  ///< Base occlusion strength multiplier (default: 1.0)
     power:       f32,  ///< Exponential falloff for sharper darkening (default: 1.0)
-    maxRadius:   f32,  ///< Fraction of screen height beyond which the sampling radius is clamped (default: 0.2)
     radius:      f32,  ///< Sampling radius in world space (default: 1.0)
     bias:        f32,  ///< Depth bias to prevent self-occlusion artifacts, in world-space units (default: 0.03)
     enabled:     bool, ///< Enable/disable SSAO effect (default: false)
@@ -117,7 +116,6 @@ EnvSSIL :: struct {
     giIntensity: f32,  ///< Indirect light strength multiplier (default: 1.0)
     aoIntensity: f32,  ///< Ambient occlusion strength multiplier (default: 1.0)
     aoPower:     f32,  ///< Exponential falloff for sharper occlusion darkening (default: 1.0)
-    maxRadius:   f32,  ///< Fraction of screen height beyond which the sampling radius is clamped (default: 0.2)
     radius:      f32,  ///< Sampling radius in world space (default: 4.0)
     bias:        f32,  ///< Depth bias to prevent self-occlusion artifacts, in world-space units (default: 0.03)
     enabled:     bool, ///< Enable/disable SSIL effect (default: false)
@@ -144,13 +142,10 @@ EnvSSGI :: struct {
  * Real-time reflections calculated in screen space.
  */
 EnvSSR :: struct {
-    maxRaySteps: i32,  ///< Maximum ray marching steps (default: 32)
-    binarySteps: i32,  ///< Binary search refinement steps (default: 4)
-    stepSize:    f32,  ///< rl.Ray step size (default: 0.125)
-    thickness:   f32,  ///< Depth tolerance for valid hits (default: 0.2)
-    maxDistance: f32,  ///< Maximum ray distance (default: 4.0)
-    edgeFade:    f32,  ///< Screen edge fade start [0,1] (default: 0.25)
-    enabled:     bool, ///< Enable/disable SSR (default: false)
+    maxIterations: i32,  ///< Maximum ray marching iterations (default: 64)
+    thickness:     f32,  ///< Depth tolerance for valid hits (default: 0.5)
+    edgeFade:      f32,  ///< Screen edge fade start [0,1] (default: 0.25)
+    enabled:       bool, ///< Enable/disable SSR (default: false)
 }
 
 /**
@@ -320,7 +315,6 @@ ENVIRONMENT_BASE :: Environment {
         sampleCount = 16,
         intensity   = 1.0,
         power       = 1.0,
-        maxRadius   = 0.2,
         radius      = 1.0,
         bias        = 0.03,
         enabled     = false,
@@ -330,32 +324,28 @@ ENVIRONMENT_BASE :: Environment {
         giIntensity = 1.0,
         aoIntensity = 1.0,
         aoPower     = 1.0,
-        maxRadius   = 0.2,
         radius      = 4.0,
         bias        = 0.03,
         enabled     = false,
     },
     ssgi = {
-        sliceCount = 4,
-        edgeFade = 0.1,
+        sliceCount      = 4,
+        edgeFade        = 0.1,
         distanceFalloff = 1.0,
         normalRejection = 0.0,
-        intensity = 1.0,
-        denoiseSteps = 4,
-        enabled = false,
+        intensity       = 1.0,
+        denoiseSteps    = 4,
+        enabled         = false,
     },
     ssr = {
-        maxRaySteps = 32,
-        binarySteps = 4,
-        stepSize    = 0.125,
-        thickness   = 0.2,
-        maxDistance = 4.0,
-        edgeFade    = 0.25,
-        enabled     = false,
+        maxIterations = 64,
+        thickness     = 0.5,
+        edgeFade      = 0.25,
+        enabled       = false,
     },
     fog = {
         mode      = .DISABLED,
-        color     = {255, 255, 255, 255},
+        color     = rl.WHITE,
         start     = 1.0,
         end       = 50.0,
         density   = 0.05,
@@ -364,9 +354,9 @@ ENVIRONMENT_BASE :: Environment {
     volumetricFog = {
         scatteringDensity = 0.01,
         absortionDensity  = 0.03,
-        scatteringColor   = {255, 255, 255, 255},
+        scatteringColor   = rl.WHITE,
         anisotropy        = 0.5,
-        emissionColor     = {255, 255, 255, 255},
+        emissionColor     = rl.WHITE,
         emissionEnergy    = 0.0,
         skyAffect         = 0.5,
         length            = 50.0,
@@ -394,7 +384,7 @@ ENVIRONMENT_BASE :: Environment {
         exposureCompensation = 0.0,
         adaptationToBright   = 0.5,
         adaptationToDark     = 1.0,
-        enabled = false,
+        enabled              = false,
     },
     tonemap = {
         mode     = .LINEAR,
