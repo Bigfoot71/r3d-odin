@@ -27,10 +27,10 @@ when ODIN_OS == .Windows {
  * @brief Collision information from a sweep test
  */
 SweepCollision :: struct {
-    hit:    bool,    ///< Whether a collision occurred
-    time:   f32,     ///< Time of impact [0-1], fraction along velocity vector
     point:  rl.Vector3, ///< World space collision point
     normal: rl.Vector3, ///< Surface normal at collision point
+    time:   f32,     ///< Time of impact [0-1], fraction along velocity vector
+    hit:    bool,    ///< Whether a collision occurred
 }
 
 @(default_calling_convention="c", link_prefix="R3D_")

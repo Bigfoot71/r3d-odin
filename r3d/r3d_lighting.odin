@@ -35,9 +35,9 @@ LightType :: enum u32 {
     TYPE_COUNT = 3,
 }
 
-// ========================================
-// STRUCTS TYPES
-// ========================================
+/**
+ * @brief Describes a light source.
+ */
 Light :: struct {
     position:    rl.Vector3,   ///< Light position (spot/omni)
     direction:   rl.Vector3,   ///< Light direction (spot/dir)
@@ -52,6 +52,9 @@ Light :: struct {
     type:        LightType, ///< Light type (directional/spot/omni)
 }
 
+/**
+ * @brief Represents an allocated shadow map for a light.
+ */
 ShadowMap :: struct {
     handle:    u32,       ///< Internal shadow map handle (don't touch)
     softness:  f32,       ///< Softness factor for penumbra

@@ -23,25 +23,25 @@ when ODIN_OS == .Windows {
     }
 }
 
-// ========================================
-// ENUM TYPES
-// ========================================
+/**
+ * @brief Type of data captured by a probe.
+ */
 ProbeType :: enum u32 {
-    ILLUMINATION = 0,
-    REFLECTION   = 1,
+    ILLUMINATION = 0, ///< Captures indirect diffuse lighting.
+    REFLECTION   = 1, ///< Captures environment reflections.
 }
 
-// ========================================
-// STRUCT TYPES
-// ========================================
+/**
+ * @brief Describes a probe used for indirect lighting or reflections.
+ */
 Probe :: struct {
-    type:     ProbeType,
-    handle:   u32, ///< Internal probe handle (don't touch)
-    position: rl.Vector3,
-    falloff:  f32,
-    range:    f32,
-    interior: bool,
-    shadows:  bool,
+    type:     ProbeType, ///< Type of data captured by the probe
+    handle:   u32,       ///< Internal probe handle (don't touch)
+    position: rl.Vector3,   ///< World-space probe position
+    falloff:  f32,       ///< Distance falloff factor
+    range:    f32,       ///< Maximum influence distance
+    interior: bool,      ///< Whether the probe is captured as an interior
+    shadows:  bool,      ///< Whether shadows are included in the capture
 }
 
 @(default_calling_convention="c", link_prefix="R3D_")
