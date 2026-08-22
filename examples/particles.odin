@@ -38,7 +38,7 @@ main :: proc() {
     // Setup particle material
     material := r3d.GetDefaultMaterial()
     material.billboardMode    = .FRONT
-    material.transparencyMode = .ALPHA
+    material.transparencyMode = .BLEND
     material.blendMode        = .ADDITIVE
     material.albedo.texture   = r3d.GetBlackTexture()
     material.emission.color   = {255, 0, 0, 255}
