@@ -71,6 +71,10 @@ Tonemap :: enum u32 {
 
 /**
  * @brief Background and skybox configuration.
+ *
+ * @note A transparent or semi-transparent background color is supported,
+ * but effects that blur/spread geometry (like bloom or DoF) will bleed
+ * or fade at silhouettes instead of blending with real content behind.
  */
 EnvBackground :: struct {
     color:    rl.Color,      ///< Background color when there is no skybox

@@ -24,16 +24,14 @@ when ODIN_OS == .Windows {
 }
 
 /**
- * @brief Transparency modes.
+ * @brief Material transparency handling modes.
  *
- * This enumeration defines how a material handles transparency during rendering.
- * It controls whether transparency is disabled, rendered using a depth pre-pass,
- * or rendered with standard alpha blending.
+ * Defines how material opacity and blending are processed during rendering.
  */
 TransparencyMode :: enum u32 {
-    DISABLED = 0, ///< No transparency, supports alpha cutoff.
-    PREPASS  = 1, ///< Supports transparency with shadows. Writes shadows for alpha > 0.1 and depth for alpha > 0.99.
-    ALPHA    = 2, ///< Standard transparency without shadows or depth writes.
+    OPAQUE = 0, ///< Fully opaque in G-Buffer (supports hard alpha cutoff/masking). Ignores blend mode.
+    HYBRID = 1, ///< Two-pass rendering: opaque cutoff in G-Buffer + forward blending.
+    BLEND  = 2, ///< Blended only (forward pass, no depth write / shadow casting).
 }
 
 /**
@@ -52,14 +50,15 @@ BillboardMode :: enum u32 {
 /**
  * @brief Blend modes.
  *
- * Defines common blending modes used in 3D rendering to combine source and destination colors.
- * @note The blend mode is applied only if you are in forward rendering mode or auto-detect mode.
+ * Defines common blending modes to combine source and destination colors.
+ * @note Ignored when R3D_TRANSPARENCY_OPAQUE is selected.
  */
 BlendMode :: enum u32 {
-    MIX                 = 0, ///< Default mode: the result will be opaque or alpha blended depending on the transparency mode.
-    ADDITIVE            = 1, ///< Additive blending: source color is added to the destination, making bright effects.
-    MULTIPLY            = 2, ///< Multiply blending: source color is multiplied with the destination, darkening the image.
-    PREMULTIPLIED_ALPHA = 3, ///< Premultiplied alpha blending: source color is blended with the destination assuming the source color is already multiplied by its alpha.
+    ALPHA               = 0, ///< Standard alpha blending: source color is blended using its alpha channel.
+    ADDITIVE            = 1, ///< Pure additive blending: source color is added directly to destination (ignores alpha).
+    ADD_ALPHA           = 2, ///< Alpha-modulated additive blending: source color scaled by alpha before adding to destination.
+    MULTIPLY            = 3, ///< Multiply blending: source color is multiplied with destination, darkening the image.
+    PREMULTIPLIED_ALPHA = 4, ///< Premultiplied alpha blending: assumes source color is already multiplied by its alpha.
 }
 
 /**
@@ -445,7 +444,7 @@ MATERIAL_BASE :: Material {
     },
     uvOffset = {0.0, 0.0},
     uvScale  = {1.0, 1.0},
-    alphaCutoff = 0.01,
+    alphaCutoff = 0.5,
     depth = {
         mode         = .LESS,
         offsetFactor = 0.0,
@@ -461,9 +460,9 @@ MATERIAL_BASE :: Material {
         opZFail  = .KEEP,
         opPass   = .REPLACE,
     },
-    transparencyMode = .DISABLED,
+    transparencyMode = .OPAQUE,
     billboardMode    = .DISABLED,
-    blendMode        = .MIX,
+    blendMode        = .ALPHA,
     cullMode         = .BACK,
     unlit            = false,
     priority         = 0,

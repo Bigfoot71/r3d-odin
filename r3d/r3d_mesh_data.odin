@@ -442,7 +442,6 @@ foreign lib {
      * @param meshData Mesh data to modify.
      * @param type Primitive type of the mesh. Points and line primitives are not
      *             supported and will default to a front-facing tangent (1, 0, 0, 1).
-     * @warning Not thread-safe: uses the shared global scratch stack
      */
     GenMeshDataTangents :: proc(meshData: ^MeshData, type: PrimitiveType) ---
 
