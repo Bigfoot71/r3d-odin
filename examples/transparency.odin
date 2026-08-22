@@ -16,7 +16,7 @@ main :: proc() {
     // Create cube model
     cube := r3d.GenMeshCube(1, 1, 1)
     matCube := r3d.MATERIAL_BASE
-    matCube.transparencyMode = .ALPHA
+    matCube.transparencyMode = .BLEND
     matCube.albedo.color = {150, 150, 255, 100}
     matCube.orm.occlusion = 1.0
     matCube.orm.roughness = 0.2
