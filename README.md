@@ -37,9 +37,7 @@ main :: proc() {
     defer r3d.UnloadMesh(mesh)
 
     // Setup lighting
-    light := r3d.CreateLight(.DIR)
-    r3d.SetLightDirection(light, {-1, -1, -1})
-    r3d.SetLightActive(light, true)
+    light := r3d.CreateDirLight({-1, -1, -1}, rl.RAYWHITE, 1.0)
 
     // Camera setup
     camera: rl.Camera3D = {
@@ -55,6 +53,7 @@ main :: proc() {
         rl.UpdateCamera(&camera, .ORBITAL)
         rl.BeginDrawing()
         r3d.Begin(camera)
+        r3d.PushLight(light)
         r3d.DrawMesh(mesh, r3d.GetDefaultMaterial(), {}, 1.0)
         r3d.End()
         rl.EndDrawing()
