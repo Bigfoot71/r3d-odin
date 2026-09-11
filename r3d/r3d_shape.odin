@@ -19,7 +19,7 @@ when ODIN_OS == .Windows {
     }
 } else when ODIN_OS == .Darwin {
     foreign import lib {
-        "/macos/libr3d.a",
+        "macos/libr3d.a",
     }
 }
 
